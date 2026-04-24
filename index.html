@@ -337,6 +337,8 @@ select.form-input { cursor: pointer; }
 
 .hidden { display: none !important; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -371,6 +373,22 @@ select.form-input { cursor: pointer; }
 <script>
 // ===== STATE =====
 var STORE_KEY = 'macan_painel_v1';
+
+// ===== FIREBASE =====
+var firebaseConfig = {
+  apiKey: "AIzaSyBepuSvq6aTSVHLeHTKEhhYzwMKr6rARqw",
+  authDomain: "macan-bfb38.firebaseapp.com",
+  databaseURL: "https://macan-bfb38-default-rtdb.firebaseio.com",
+  projectId: "macan-bfb38",
+  storageBucket: "macan-bfb38.firebasestorage.app",
+  messagingSenderId: "227690402162",
+  appId: "1:227690402162:web:f657c0ee835f07722fcdeb"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var dbRef = db.ref('painel');
+var _firebaseSaving = false;
+var _firebaseReady = false;
 var CONSULTORES = [
   { id: 'claudenio', nome: 'Claudênio' },
   { id: 'joaopaulo', nome: 'João Paulo' },
@@ -432,38 +450,81 @@ function defaultState() {
   return s;
 }
 
-var state = loadState();
+var state = defaultState();
 
-function loadState() {
+function ensureState(s) {
+  CONSULTORES.forEach(function(c) {
+    if (!s.consultores) s.consultores = {};
+    if (!s.consultores[c.id]) s.consultores[c.id] = { crm: {}, faturamento: {}, followups: [], reunioes: [] };
+    var con = s.consultores[c.id];
+    if (!con.crm) con.crm = {};
+    if (!con.faturamento) con.faturamento = {};
+    if (!con.followups) con.followups = [];
+    if (!con.reunioes) con.reunioes = [];
+  });
+  if (!s.leads) s.leads = {};
+  if (!s.demandas) s.demandas = [];
+  if (!s.reunioes) s.reunioes = [];
+  if (!s.followups) s.followups = [];
+  if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
+  if (!s.faturamento.meses) s.faturamento.meses = {};
+  if (!s.calEventos) s.calEventos = [];
+  return s;
+}
+
+function loadStateLocal() {
   try {
     var raw = localStorage.getItem(STORE_KEY);
-    if (raw) {
-      var s = JSON.parse(raw);
-      CONSULTORES.forEach(function(c) {
-        if (!s.consultores) s.consultores = {};
-        if (!s.consultores[c.id]) s.consultores[c.id] = { crm: {}, faturamento: {}, followups: [], reunioes: [] };
-        var con = s.consultores[c.id];
-        if (!con.crm) con.crm = {};
-        if (!con.faturamento) con.faturamento = {};
-        if (!con.followups) con.followups = [];
-        if (!con.reunioes) con.reunioes = [];
-      });
-      if (!s.leads) s.leads = {};
-      if (!s.demandas) s.demandas = [];
-      if (!s.reunioes) s.reunioes = [];
-      if (!s.followups) s.followups = [];
-      if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
-      if (!s.faturamento.meses) s.faturamento.meses = {};
-      if (!s.calEventos) s.calEventos = [];
-      return s;
-    }
+    if (raw) return ensureState(JSON.parse(raw));
   } catch(e) {}
-  return defaultState();
+  return null;
 }
 
+var _saveTimer = null;
 function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(function() {
+    _firebaseSaving = true;
+    var dataToSave = JSON.parse(JSON.stringify(state));
+    delete dataToSave.module;
+    delete dataToSave.submodule;
+    delete dataToSave.consultor;
+    delete dataToSave.leadMonth;
+    delete dataToSave.calYear;
+    delete dataToSave.calMonth;
+    dbRef.set(dataToSave).then(function() {
+      _firebaseSaving = false;
+    }).catch(function(err) {
+      _firebaseSaving = false;
+      console.error('Firebase save error:', err);
+    });
+  }, 500);
 }
+
+// Real-time sync from Firebase
+dbRef.on('value', function(snapshot) {
+  if (_firebaseSaving) return;
+  var data = snapshot.val();
+  if (data) {
+    var uiState = {
+      module: state.module,
+      submodule: state.submodule,
+      consultor: state.consultor,
+      leadMonth: state.leadMonth,
+      calYear: state.calYear,
+      calMonth: state.calMonth
+    };
+    Object.assign(state, ensureState(data), uiState);
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    if (_firebaseReady) renderContent();
+  }
+  _firebaseReady = true;
+});
+
+// Initial load: try local first, Firebase will override when ready
+var _localState = loadStateLocal();
+if (_localState) state = _localState;
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
 function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
