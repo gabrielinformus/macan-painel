@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MACAN — Painel Operacional</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2306102B'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Inter,system-ui,sans-serif' font-weight='800' font-size='36' fill='%23E8F0FB'%3EM%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F0F2F5;
+  --white: #FFFFFF;
+  --navy-900: #06102B;
+  --navy-800: #0A1A3A;
+  --navy-700: #0E2450;
+  --navy-600: #143068;
+  --navy-500: #1B3F7E;
+  --navy-400: #2A5298;
+  --navy-300: #4A7BC8;
+  --navy-200: #7BA3E0;
+  --navy-100: #B8D0F0;
+  --navy-50: #E8F0FB;
+  --gray-900: #111827;
+  --gray-800: #1F2937;
+  --gray-700: #374151;
+  --gray-600: #4B5563;
+  --gray-500: #6B7280;
+  --gray-400: #9CA3AF;
+  --gray-300: #D1D5DB;
+  --gray-200: #E5E7EB;
+  --gray-100: #F3F4F6;
+  --gray-50: #F9FAFB;
+  --green: #22C55E;
+  --green-bg: #F0FDF4;
+  --red: #EF4444;
+  --red-bg: #FEF2F2;
+  --yellow: #F59E0B;
+  --yellow-bg: #FFFBEB;
+  --blue: #3B82F6;
+  --blue-bg: #EFF6FF;
+  --purple: #8B5CF6;
+  --purple-bg: #F5F3FF;
+  --gold: #D4A843;
+  --primary: var(--navy-600);
+  --primary-bg: var(--navy-50);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --transition: all 0.15s ease;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--gray-900); display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; min-height: 100vh; background: var(--navy-900);
+  display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+}
+.sidebar-brand {
+  padding: 24px 20px 20px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-brand .logo {
+  width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-brand .logo svg { width: 22px; height: 22px; stroke: var(--navy-200); }
+.sidebar-brand h1 { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 0.06em; }
+.sidebar-brand small { font-size: 9px; color: var(--navy-300); display: block; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+
+.sidebar-nav { flex: 1; padding: 16px 10px; overflow-y: auto; }
+.nav-section { margin-bottom: 20px; }
+.nav-section-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--navy-400); padding: 0 10px; margin-bottom: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--navy-200); cursor: pointer;
+  transition: var(--transition); margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: var(--navy-600); color: #fff; font-weight: 600; }
+.nav-item svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.nav-item .badge {
+  margin-left: auto; font-size: 10px; font-weight: 700; background: var(--navy-600);
+  color: var(--navy-100); padding: 2px 7px; border-radius: 10px;
+}
+.nav-item.active .badge { background: rgba(255,255,255,0.15); color: #fff; }
+
+.nav-sub { margin-left: 28px; }
+.nav-sub .nav-item { font-size: 12px; padding: 7px 12px; }
+
+/* MAIN */
+.main { margin-left: 240px; flex: 1; min-height: 100vh; }
+.topbar {
+  background: var(--white); border-bottom: 1px solid var(--gray-200);
+  padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar h2 { font-size: 20px; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px 32px; }
+
+/* CARDS */
+.card {
+  background: var(--white); border-radius: var(--radius); border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; }
+.card-body { padding: 20px; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: var(--transition);
+}
+.btn-primary { background: var(--navy-600); color: #fff; }
+.btn-primary:hover { background: var(--navy-700); }
+.btn-outline { background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300); }
+.btn-outline:hover { background: var(--gray-50); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: var(--red); color: #fff; }
+
+/* FORM */
+.form-input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit; transition: var(--transition); background: var(--white);
+}
+.form-input:focus { outline: none; border-color: var(--navy-400); box-shadow: 0 0 0 3px rgba(20,48,104,0.1); }
+.form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 4px; display: block; }
+textarea.form-input { resize: vertical; min-height: 80px; }
+select.form-input { cursor: pointer; }
+
+/* TABLES */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--gray-400); padding: 8px 12px;
+  border-bottom: 2px solid var(--gray-100);
+}
+.data-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--gray-100); font-size: 13px;
+}
+.data-table tr:hover { background: var(--gray-50); }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--white); border-radius: var(--radius); padding: 20px;
+  border: 1px solid var(--gray-200); box-shadow: var(--shadow);
+}
+.stat-card .label { font-size: 11px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-card .value { font-size: 28px; font-weight: 800; margin-top: 6px; line-height: 1; }
+.stat-card .sub { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+/* TAGS */
+.tag {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+}
+.tag-green { background: var(--green-bg); color: var(--green); }
+.tag-red { background: var(--red-bg); color: var(--red); }
+.tag-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.tag-blue { background: var(--blue-bg); color: var(--blue); }
+.tag-purple { background: var(--purple-bg); color: var(--purple); }
+.tag-gray { background: var(--gray-100); color: var(--gray-500); }
+
+/* CRM BOARD */
+.crm-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.crm-col { background: var(--gray-50); border-radius: var(--radius); padding: 12px; min-height: 300px; min-width: 220px; flex: 1; }
+.crm-col-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--gray-200);
+}
+.crm-col-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.crm-col-count {
+  font-size: 10px; font-weight: 700; background: var(--gray-200); color: var(--gray-600);
+  padding: 2px 8px; border-radius: 10px;
+}
+.crm-card {
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 12px; margin-bottom: 8px; cursor: grab; transition: var(--transition);
+}
+.crm-card:hover { box-shadow: var(--shadow); border-color: var(--gray-300); }
+.crm-card.dragging { opacity: 0.3; }
+.crm-card .lead-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.crm-card .lead-info { font-size: 11px; color: var(--gray-500); margin-bottom: 2px; }
+.crm-card .lead-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.crm-cards { min-height: 40px; }
+.crm-cards.drag-over { background: rgba(20,48,104,0.06); border-radius: 6px; }
+
+/* CALENDAR */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--gray-200); border-radius: var(--radius); overflow: hidden; }
+.cal-header { background: var(--navy-800); color: #fff; padding: 10px; text-align: center; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.cal-day {
+  background: var(--white); min-height: 100px; padding: 8px;
+  font-size: 12px; cursor: pointer; transition: var(--transition);
+}
+.cal-day:hover { background: var(--navy-50); }
+.cal-day .day-num { font-weight: 700; color: var(--gray-700); margin-bottom: 4px; }
+.cal-day.other-month .day-num { color: var(--gray-300); }
+.cal-day.today { background: var(--navy-50); }
+.cal-day.today .day-num { color: var(--navy-600); }
+.cal-event {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.cal-event.meeting { background: rgba(20,48,104,0.12); color: var(--navy-700); }
+.cal-event.task { background: rgba(245,158,11,0.12); color: var(--yellow); }
+.cal-event.followup { background: rgba(34,197,94,0.12); color: var(--green); }
+
+/* CONSULTOR TABS */
+.consul-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+.consul-tab {
+  padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--gray-200); background: var(--white);
+  color: var(--gray-600); transition: var(--transition);
+}
+.consul-tab:hover { border-color: var(--navy-300); color: var(--navy-600); }
+.consul-tab.active { background: var(--navy-600); color: #fff; border-color: var(--navy-600); }
+
+/* MONTH TABS */
+.month-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+.month-tab {
+  padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--gray-200); background: var(--white); color: var(--gray-500);
+}
+.month-tab:hover { border-color: var(--navy-300); }
+.month-tab.active { background: var(--navy-600); color: #fff; border-color: var(--navy-600); font-weight: 700; }
+.month-tab.has-data { background: rgba(20,48,104,0.06); }
+
+/* DEMAND BOARD */
+.demand-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.demand-col { background: var(--gray-50); border-radius: var(--radius); padding: 12px; min-height: 200px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(6,16,43,0.5); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  background: var(--white); border-radius: var(--radius); width: 520px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close {
+  background: none; border: none; cursor: pointer; color: var(--gray-400);
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+}
+.modal-close:hover { background: var(--gray-100); color: var(--gray-700); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* MEETING */
+.meeting-card {
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
+}
+.meeting-time {
+  font-size: 14px; font-weight: 700; color: var(--navy-600); min-width: 50px; text-align: center;
+}
+.meeting-info { flex: 1; }
+.meeting-info .name { font-size: 13px; font-weight: 600; }
+.meeting-info .detail { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+.meeting-status { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+
+/* FOLLOWUP */
+.followup-card {
+  background: var(--white); border-left: 3px solid var(--navy-400);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 12px 14px; margin-bottom: 8px; border-top: 1px solid var(--gray-100);
+  border-right: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100);
+}
+.followup-card.urgent { border-left-color: var(--red); }
+.followup-card.warm { border-left-color: var(--yellow); }
+.followup-card.done { border-left-color: var(--green); opacity: 0.6; }
+
+/* FOLLOW-UP CADÊNCIA TABLE */
+.fu-table-wrap { overflow-x: auto; }
+.fu-table {
+  width: 100%; border-collapse: collapse; background: var(--white);
+  border-radius: 10px; overflow: hidden; border: 1px solid var(--gray-200);
+}
+.fu-table th {
+  text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: 0.04em; padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-200); background: var(--gray-50);
+}
+.fu-table td {
+  padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--gray-50);
+  vertical-align: middle;
+}
+.fu-table tr:last-child td { border-bottom: none; }
+.fu-table .fu-nome { font-weight: 600; cursor: pointer; color: var(--gray-900); }
+.fu-table .fu-fone { color: var(--blue); cursor: pointer; font-size: 12px; text-decoration: none; }
+.fu-table .fu-check { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
+.fu-table tr.fu-row-novo td:first-child { border-left: 3px solid var(--blue); }
+.fu-table tr.fu-row-em-contato td:first-child { border-left: 3px solid var(--yellow); }
+.fu-table tr.fu-row-respondeu td:first-child { border-left: 3px solid var(--green); }
+.fu-table tr.fu-row-agendado td:first-child { border-left: 3px solid var(--purple); }
+.fu-table tr.fu-row-perdido td:first-child { border-left: 3px solid var(--red); }
+.fu-etapa { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.fu-etapa.e-novo { background: rgba(59,130,246,0.12); color: var(--blue); }
+.fu-etapa.e-em-contato { background: rgba(245,158,11,0.12); color: var(--yellow); }
+.fu-etapa.e-respondeu { background: rgba(34,197,94,0.12); color: var(--green); }
+.fu-etapa.e-agendado { background: rgba(139,92,246,0.12); color: var(--purple); }
+.fu-etapa.e-perdido { background: rgba(239,68,68,0.12); color: var(--red); }
+
+/* CHART */
+.chart-area { position: relative; height: 220px; display: flex; align-items: flex-end; gap: 8px; padding: 0 4px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar {
+  width: 100%; border-radius: 4px 4px 0 0; transition: all 0.3s; cursor: pointer; position: relative;
+  background: linear-gradient(180deg, var(--navy-400), var(--navy-600));
+}
+.chart-bar:hover { background: linear-gradient(180deg, var(--navy-300), var(--navy-500)); }
+.chart-bar-meta { background: rgba(212,168,67,0.3); border-radius: 4px; width: 100%; position: absolute; bottom: 0; }
+.chart-label { font-size: 10px; font-weight: 600; color: var(--gray-500); }
+.chart-tooltip {
+  position: absolute; background: var(--navy-900); color: #fff; padding: 8px 14px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; pointer-events: none;
+  white-space: nowrap; z-index: 10; display: none;
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <h1>MACAN</h1>
+      <small>Estratégias Financeiras</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topbar-title">Dashboard</h2>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--gray-400)" id="topbar-date"></span>
+    </div>
+  </div>
+  <div class="content" id="app-content"></div>
+</div>
+
+<!-- MODAL CONTAINER -->
+<div id="modal-root"></div>
+
+<script>
+// ===== STATE =====
+var STORE_KEY = 'macan_painel_v1';
+var CONSULTORES = [
+  { id: 'claudenio', nome: 'Claudênio' },
+  { id: 'joaopaulo', nome: 'João Paulo' },
+  { id: 'marcos', nome: 'Marcos Júnior' },
+  { id: 'juliana', nome: 'Juliana' },
+  { id: 'wesley', nome: 'Wesley' }
+];
+var var_navy = '#143068';
+var CRM_STAGES = [
+  { key: 'mes-passado', label: 'Mês Passado', color: '#6B7280' },
+  { key: 'reuniao-feita', label: 'Reunião Feita', color: '#3B82F6' },
+  { key: 'desqualificado', label: 'Desqualificado', color: '#EF4444' },
+  { key: 'proposta', label: 'Proposta Enviada', color: '#8B5CF6' },
+  { key: 'followup', label: 'Follow-Up', color: '#F59E0B' },
+  { key: 'negociacao', label: 'Negociação', color: var_navy },
+  { key: 'venda-fechada', label: 'Venda Fechada', color: '#22C55E' },
+  { key: 'perdido', label: 'Perdido', color: '#DC2626' },
+  { key: 'mes-que-vem', label: 'Mês que Vem', color: '#06B6D4' }
+];
+var CRM_TIPOS = ['Imóvel','Alavancagem Patrimonial','Carro','Moto','Outro'];
+
+var DEMAND_STAGES = [
+  { key: 'pendente', label: 'Pendente', color: '#EF4444' },
+  { key: 'andamento', label: 'Em Andamento', color: '#F59E0B' },
+  { key: 'revisao', label: 'Revisão', color: '#3B82F6' },
+  { key: 'concluida', label: 'Concluída', color: '#22C55E' }
+];
+var MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+var MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function defaultState() {
+  var s = {
+    module: 'dashboard',
+    submodule: '',
+    consultor: 'claudenio',
+    leadMonth: new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0'),
+    calYear: new Date().getFullYear(),
+    calMonth: new Date().getMonth(),
+    leads: {},
+    consultores: {},
+    demandas: [],
+    reunioes: [],
+    faturamento: {
+      metaAnual: 1000000,
+      meses: {}
+    },
+    followups: [],
+    calEventos: [],
+    seeded: false
+  };
+  CONSULTORES.forEach(function(c) {
+    s.consultores[c.id] = {
+      crm: {},
+      faturamento: {},
+      followups: [],
+      reunioes: []
+    };
+  });
+  return s;
+}
+
+var state = loadState();
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      CONSULTORES.forEach(function(c) {
+        if (!s.consultores) s.consultores = {};
+        if (!s.consultores[c.id]) s.consultores[c.id] = { crm: {}, faturamento: {}, followups: [], reunioes: [] };
+        var con = s.consultores[c.id];
+        if (!con.crm) con.crm = {};
+        if (!con.faturamento) con.faturamento = {};
+        if (!con.followups) con.followups = [];
+        if (!con.reunioes) con.reunioes = [];
+      });
+      if (!s.leads) s.leads = {};
+      if (!s.demandas) s.demandas = [];
+      if (!s.reunioes) s.reunioes = [];
+      if (!s.followups) s.followups = [];
+      if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
+      if (!s.faturamento.meses) s.faturamento.meses = {};
+      if (!s.calEventos) s.calEventos = [];
+      return s;
+    }
+  } catch(e) {}
+  return defaultState();
+}
+
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function formatNum(n) { return Number(n).toLocaleString('pt-BR'); }
+
+// ===== DATE =====
+var today = new Date();
+document.getElementById('topbar-date').textContent =
+  today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+// ===== NAVIGATION =====
+function switchModule(mod, sub) {
+  state.module = mod;
+  state.submodule = sub || '';
+  saveState();
+  renderSidebar();
+  renderContent();
+}
+
+function renderSidebar() {
+  var nav = document.getElementById('sidebar-nav');
+  var mod = state.module;
+  var sub = state.submodule;
+  var h = '';
+
+  h += '<div class="nav-section"><div class="nav-section-title">Principal</div>';
+  h += navItem('dashboard', '', 'Dashboard', '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>');
+  h += '</div>';
+
+  h += '<div class="nav-section"><div class="nav-section-title">Consultores</div>';
+  h += navItem('consultores', '', 'Consultores', '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
+  if (mod === 'consultores') {
+    h += '<div class="nav-sub">';
+    CONSULTORES.forEach(function(c) {
+      h += '<div class="nav-item' + (state.consultor === c.id ? ' active' : '') + '" onclick="selectConsultor(\'' + c.id + '\')">' + escHtml(c.nome) + '</div>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="nav-section"><div class="nav-section-title">Operacional</div>';
+  h += navItem('leads', '', 'Leads MACAN', '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>');
+  if (mod === 'leads') {
+    h += '<div class="nav-sub">';
+    h += subNavItem('leads', 'crm', 'CRM');
+    h += subNavItem('leads', 'followup', 'Follow-Up');
+    h += subNavItem('leads', 'reunioes', 'Reuniões');
+    h += '</div>';
+  }
+  h += navItem('demandas', '', 'Demandas', '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>');
+  h += navItem('calendario', '', 'Calendário', '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
+  h += '</div>';
+
+  h += '<div class="nav-section"><div class="nav-section-title">Financeiro</div>';
+  h += navItem('faturamento', '', 'Faturamento & Metas', '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>');
+  h += '</div>';
+
+  nav.innerHTML = h;
+}
+
+function navItem(mod, sub, label, iconPath) {
+  var active = state.module === mod && (!sub || state.submodule === sub);
+  return '<div class="nav-item' + (active ? ' active' : '') + '" onclick="switchModule(\'' + mod + '\',\'' + sub + '\')">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + iconPath + '</svg>'
+    + label + '</div>';
+}
+
+function subNavItem(mod, sub, label) {
+  var active = state.module === mod && state.submodule === sub;
+  return '<div class="nav-item' + (active ? ' active' : '') + '" onclick="switchModule(\'' + mod + '\',\'' + sub + '\')">' + label + '</div>';
+}
+
+function selectConsultor(id) {
+  state.consultor = id;
+  state.module = 'consultores';
+  saveState();
+  renderSidebar();
+  renderContent();
+}
+
+// ===== RENDER ROUTER =====
+function renderContent() {
+  var title = 'Dashboard';
+  switch(state.module) {
+    case 'dashboard': title = 'Dashboard'; renderDashboard(); break;
+    case 'consultores': var cn = CONSULTORES.find(function(c){return c.id===state.consultor;}); title = 'Consultores — ' + (cn?cn.nome:''); renderConsultor(); break;
+    case 'leads':
+      if (state.submodule === 'followup') { title = 'Leads — Follow-Up'; renderLeadFollowup(); }
+      else if (state.submodule === 'reunioes') { title = 'Leads — Reuniões'; renderLeadReunioes(); }
+      else { title = 'Leads MACAN — CRM'; state.submodule = 'crm'; renderLeadCRM(); }
+      break;
+    case 'demandas': title = 'Demandas'; renderDemandas(); break;
+    case 'calendario': title = 'Calendário'; renderCalendario(); break;
+    case 'faturamento': title = 'Faturamento & Metas'; renderFaturamento(); break;
+  }
+  document.getElementById('topbar-title').textContent = title;
+  renderSidebar();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  var el = document.getElementById('app-content');
+  var totalLeads = 0, totalReunioes = 0, totalFechados = 0, fatTotal = 0;
+
+  Object.keys(state.leads).forEach(function(id) {
+    totalLeads++;
+    if (state.leads[id].stage === 'reuniao') totalReunioes++;
+    if (state.leads[id].stage === 'fechado') totalFechados++;
+  });
+
+  var mesKey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+  CONSULTORES.forEach(function(con) {
+    var d = state.consultores[con.id];
+    var fat = d.faturamento[mesKey] || [];
+    fat.forEach(function(f) { fatTotal += (f.valor || 0); });
+  });
+
+  var demPend = state.demandas.filter(function(d){return d.stage==='pendente';}).length;
+  var reun = state.reunioes.filter(function(r) {
+    return r.data && r.data.startsWith(today.toISOString().substr(0,10));
+  }).length;
+
+  var h = '';
+  h += '<div class="stats-grid">';
+  h += statCard('Total de Leads', totalLeads, 'no pipeline');
+  h += statCard('Reuniões Hoje', reun, 'agendadas');
+  h += statCard('Fechados', totalFechados, 'este mês');
+  h += statCard('Faturamento', 'R$ ' + formatNum(fatTotal), MESES[today.getMonth()] + '/' + today.getFullYear());
+  h += statCard('Demandas Pendentes', demPend, 'a resolver');
+  h += '</div>';
+
+  // Consultores overview
+  h += '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3>Consultores — Visão Geral</h3></div><div class="card-body">';
+  h += '<table class="data-table"><thead><tr><th>Consultor</th><th>Leads</th><th>Reuniões (mês)</th><th>Fechamentos</th><th>Faturamento</th><th></th></tr></thead><tbody>';
+  CONSULTORES.forEach(function(con) {
+    var d = state.consultores[con.id];
+    var leads = 0, fechados = 0, fat = 0, reuns = 0;
+    Object.keys(d.crm).forEach(function(lid) { leads++; if (d.crm[lid].stage === 'fechado') fechados++; });
+    var fatArr = d.faturamento[mesKey] || [];
+    fatArr.forEach(function(f) { fat += (f.valor||0); });
+    reuns = d.reunioes.filter(function(r){ return r.data && r.data.substr(0,7) === mesKey; }).length;
+    h += '<tr>';
+    h += '<td><strong>' + escHtml(con.nome) + '</strong></td>';
+    h += '<td>' + leads + '</td>';
+    h += '<td>' + reuns + '</td>';
+    h += '<td><span class="tag tag-green">' + fechados + '</span></td>';
+    h += '<td style="font-weight:700;color:var(--green)">R$ ' + formatNum(fat) + '</td>';
+    h += '<td><button class="btn btn-outline btn-sm" onclick="selectConsultor(\'' + con.id + '\')">Ver</button></td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div></div>';
+
+  // Últimas reuniões
+  h += '<div class="card"><div class="card-header"><h3>Próximas Reuniões</h3><button class="btn btn-primary btn-sm" onclick="switchModule(\'leads\',\'reunioes\')">Ver Todas</button></div><div class="card-body">';
+  var proxReun = state.reunioes.filter(function(r){ return r.data >= today.toISOString().substr(0,10); }).sort(function(a,b){ return a.data < b.data ? -1 : 1; }).slice(0,5);
+  if (proxReun.length === 0) {
+    h += '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Nenhuma reunião agendada</div>';
+  } else {
+    proxReun.forEach(function(r) {
+      var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===r.consultor;}); if(cn) conNome = cn.nome;
+      h += '<div class="meeting-card">';
+      h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
+      h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div><div class="detail">' + escHtml(r.data||'') + ' — Consultor: ' + escHtml(conNome) + '</div></div>';
+      h += '<span class="tag tag-' + (r.status==='confirmada'?'green':r.status==='cancelada'?'red':'yellow') + '">' + escHtml(r.status||'pendente') + '</span>';
+      h += '</div>';
+    });
+  }
+  h += '</div></div>';
+
+  el.innerHTML = h;
+}
+
+function statCard(label, value, sub) {
+  return '<div class="stat-card"><div class="label">' + label + '</div><div class="value">' + value + '</div><div class="sub">' + sub + '</div></div>';
+}
+
+// ===== CONSULTOR DETAIL =====
+function renderConsultor() {
+  var el = document.getElementById('app-content');
+  var conId = state.consultor;
+  var con = CONSULTORES.find(function(c){return c.id===conId;});
+  var data = state.consultores[conId];
+  var now = new Date();
+  var fatMonth = state.leadMonth || now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+
+  var h = '';
+
+  // Tabs consultores
+  h += '<div class="consul-tabs">';
+  CONSULTORES.forEach(function(c) {
+    h += '<div class="consul-tab' + (conId === c.id ? ' active' : '') + '" onclick="selectConsultor(\'' + c.id + '\')">' + escHtml(c.nome) + '</div>';
+  });
+  h += '</div>';
+
+  // Sub navigation
+  var csub = state.submodule || 'crm';
+  h += '<div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:2px solid var(--gray-100);padding-bottom:12px">';
+  ['crm','followup','faturamento','reunioes'].forEach(function(tab) {
+    var labels = { crm: 'CRM', followup: 'Follow-Up', faturamento: 'Faturamento', reunioes: 'Reuniões' };
+    var active = csub === tab;
+    h += '<button onclick="state.submodule=\'' + tab + '\';saveState();renderContent()" style="padding:8px 18px;border:none;border-bottom:2px solid ' + (active?'var(--navy-600)':'transparent') + ';background:none;font-size:13px;font-weight:' + (active?'700':'500') + ';color:' + (active?'var(--navy-600)':'var(--gray-500)') + ';cursor:pointer;margin-bottom:-14px">' + labels[tab] + '</button>';
+  });
+  h += '</div>';
+
+  if (csub === 'crm') h += renderConsultorCRM(conId, data);
+  else if (csub === 'followup') h += renderConsultorFollowup(conId, data);
+  else if (csub === 'faturamento') h += renderConsultorFaturamento(conId, data, fatMonth);
+  else if (csub === 'reunioes') h += renderConsultorReunioes(conId, data);
+
+  el.innerHTML = h;
+}
+
+// Consultor CRM
+function renderConsultorCRM(conId, data) {
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700">Pipeline — ' + escHtml(CONSULTORES.find(function(c){return c.id===conId;}).nome) + '</h3>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddLeadConsultor(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
+  h += '</div>';
+
+  // Summary cards
+  var totalLeads = 0, totalValor = 0, totalFechado = 0, totalFechadoValor = 0;
+  Object.keys(data.crm).forEach(function(lid) {
+    var l = data.crm[lid]; totalLeads++;
+    if (l.valor) totalValor += parseFloat(l.valor) || 0;
+    if (l.stage === 'venda-fechada') { totalFechado++; totalFechadoValor += parseFloat(l.valor) || 0; }
+  });
+  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  h += '<div class="stat-card" style="padding:14px"><div class="label">Total Negociações</div><div class="value" style="font-size:22px">' + totalLeads + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--navy-600)">R$ ' + formatNum(totalValor) + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px"><div class="label">Valor Fechado</div><div class="value" style="font-size:22px;color:var(--green)">R$ ' + formatNum(totalFechadoValor) + '</div></div>';
+  h += '</div>';
+
+  h += '<div class="crm-board" id="crm-board-consul">';
+  CRM_STAGES.forEach(function(stage) {
+    var leads = [];
+    Object.keys(data.crm).forEach(function(lid) {
+      if (data.crm[lid].stage === stage.key) leads.push(data.crm[lid]);
+    });
+    var colValor = 0; leads.forEach(function(l){ colValor += parseFloat(l.valor)||0; });
+    h += '<div class="crm-col">';
+    h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    h += '<span class="crm-col-title" style="color:' + stage.color + '">' + stage.label + '</span>';
+    h += '<span class="crm-col-count">' + leads.length + '</span>';
+    h += '</div>';
+    if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
+    h += '</div>';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')">';
+    leads.forEach(function(l) {
+      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')">';
+      h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
+      if (l.telefone) h += '<div class="lead-info"><a href="https://wa.me/' + l.telefone.replace(/\D/g,'') + '" target="_blank" style="color:var(--blue);text-decoration:none;font-size:11px" onclick="event.stopPropagation()">' + escHtml(l.telefone) + '</a></div>';
+      if (l.valor) h += '<div style="font-size:13px;font-weight:700;color:var(--green);margin:4px 0">R$ ' + formatNum(l.valor) + '</div>';
+      h += '<div class="lead-tags" style="margin-top:4px">';
+      if (l.tipo) h += '<span class="tag tag-purple" style="font-size:9px">' + escHtml(l.tipo) + '</span>';
+      if (l.origem) h += '<span class="tag tag-blue" style="font-size:9px">' + escHtml(l.origem) + '</span>';
+      h += '</div>';
+      if (l.interesse) h += '<div class="lead-info" style="margin-top:4px;font-style:italic">' + escHtml(l.interesse) + '</div>';
+      if (l.stage === 'perdido' && l.motivoPerda) h += '<div style="font-size:10px;color:var(--red);margin-top:4px;font-weight:600">Motivo: ' + escHtml(l.motivoPerda) + '</div>';
+      h += '<div style="margin-top:8px;display:flex;gap:4px">';
+      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="editConsulLead(\'' + conId + '\',\'' + l.id + '\')">Editar</button>';
+      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="removeConsulLead(\'' + conId + '\',\'' + l.id + '\')">×</button>';
+      h += '</div></div>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function dropConsulLead(e, conId, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  var leadId = e.dataTransfer.getData('text');
+  if (state.consultores[conId].crm[leadId]) {
+    state.consultores[conId].crm[leadId].stage = stage;
+    saveState(); renderContent();
+  }
+}
+
+function openAddLeadConsultor(conId) {
+  showModal('Nova Negociação — ' + CONSULTORES.find(function(c){return c.id===conId;}).nome, [
+    { id: 'cl-nome', label: 'Nome do Cliente', type: 'text' },
+    { id: 'cl-tel', label: 'Telefone', type: 'text' },
+    { id: 'cl-email', label: 'E-mail', type: 'text' },
+    { id: 'cl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS },
+    { id: 'cl-valor', label: 'Valor (R$)', type: 'number' },
+    { id: 'cl-interesse', label: 'Detalhes / Observação', type: 'text' },
+    { id: 'cl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'] }
+  ], function() {
+    var lead = {
+      id: genId(),
+      nome: document.getElementById('cl-nome').value.trim(),
+      telefone: document.getElementById('cl-tel').value.trim(),
+      email: document.getElementById('cl-email').value.trim(),
+      tipo: document.getElementById('cl-tipo').value,
+      valor: parseFloat(document.getElementById('cl-valor').value) || 0,
+      interesse: document.getElementById('cl-interesse').value.trim(),
+      origem: document.getElementById('cl-origem').value,
+      stage: 'reuniao-feita',
+      createdAt: new Date().toISOString()
+    };
+    if (!lead.nome) { document.getElementById('cl-nome').focus(); return; }
+    state.consultores[conId].crm[lead.id] = lead;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function editConsulLead(conId, leadId) {
+  var l = state.consultores[conId].crm[leadId];
+  if (!l) return;
+  showModal('Editar Negociação', [
+    { id: 'cl-nome', label: 'Nome do Cliente', type: 'text', value: l.nome },
+    { id: 'cl-tel', label: 'Telefone', type: 'text', value: l.telefone },
+    { id: 'cl-email', label: 'E-mail', type: 'text', value: l.email },
+    { id: 'cl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS, value: l.tipo },
+    { id: 'cl-valor', label: 'Valor (R$)', type: 'number', value: l.valor || '' },
+    { id: 'cl-interesse', label: 'Detalhes / Observação', type: 'text', value: l.interesse },
+    { id: 'cl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'], value: l.origem },
+    { id: 'cl-stage', label: 'Etapa', type: 'select', options: CRM_STAGES.map(function(s){return s.label;}), value: (CRM_STAGES.find(function(s){return s.key===l.stage;})||{}).label },
+    { id: 'cl-motivo', label: 'Motivo da Perda (se perdido)', type: 'text', value: l.motivoPerda || '' }
+  ], function() {
+    l.nome = document.getElementById('cl-nome').value.trim();
+    l.telefone = document.getElementById('cl-tel').value.trim();
+    l.email = document.getElementById('cl-email').value.trim();
+    l.tipo = document.getElementById('cl-tipo').value;
+    l.valor = parseFloat(document.getElementById('cl-valor').value) || 0;
+    l.interesse = document.getElementById('cl-interesse').value.trim();
+    l.origem = document.getElementById('cl-origem').value;
+    l.motivoPerda = document.getElementById('cl-motivo').value.trim();
+    var stageLabel = document.getElementById('cl-stage').value;
+    var found = CRM_STAGES.find(function(s){return s.label===stageLabel;});
+    if (found) l.stage = found.key;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function removeConsulLead(conId, leadId) {
+  if (!confirm('Remover este lead?')) return;
+  delete state.consultores[conId].crm[leadId];
+  saveState(); renderContent();
+}
+
+// Consultor Follow-Up
+function ensureFuData(conId) {
+  var d = state.consultores[conId];
+  if (!d.fuLeads) d.fuLeads = {};
+  return d;
+}
+
+function getFuMonth() {
+  return state.leadMonth || new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0');
+}
+
+function renderConsultorFollowup(conId, data) {
+  ensureFuData(conId);
+  var fuMonth = getFuMonth();
+  var now = new Date();
+  var h = '';
+
+  // Month selector
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:17px;font-weight:700">Fluxo de Cadência — Follow Up</h3>';
+  h += '<div style="display:flex;gap:8px;align-items:center">';
+  h += '<select class="form-input" style="width:160px;font-size:13px" onchange="state.leadMonth=this.value;saveState();renderContent()">';
+  for (var mi = 1; mi <= 12; mi++) {
+    var mk = now.getFullYear() + '-' + String(mi).padStart(2,'0');
+    h += '<option value="' + mk + '"' + (mk===fuMonth?' selected':'') + '>' + MESES_FULL[mi-1] + ' ' + now.getFullYear() + '</option>';
+  }
+  h += '</select>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddFuLead(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar Lead</button>';
+  h += '</div></div>';
+
+  var leads = data.fuLeads[fuMonth] || [];
+
+  h += '<div class="fu-table-wrap">';
+  h += '<table class="fu-table"><thead><tr><th>Nome</th><th>Número</th><th>Etapa</th><th>1°</th><th>2°</th><th>3°</th><th>4°</th><th>5°</th><th>6°</th><th>7°</th><th>8°</th><th style="width:40px"></th></tr></thead><tbody>';
+
+  if (leads.length === 0) {
+    h += '<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
+  } else {
+    leads.forEach(function(l) {
+      var rowCls = l.etapa ? ' fu-row-' + l.etapa : '';
+      h += '<tr class="' + rowCls + '">';
+      h += '<td class="fu-nome" onclick="editFuLead(\'' + conId + '\',\'' + l.id + '\')">' + escHtml(l.nome) + '</td>';
+      h += '<td>';
+      if (l.fone) h += '<a class="fu-fone" href="https://wa.me/' + l.fone.replace(/\D/g,'') + '" target="_blank">' + escHtml(l.fone) + '</a>';
+      else h += '-';
+      h += '</td>';
+      h += '<td><span class="fu-etapa e-' + (l.etapa||'novo') + '">' + (l.etapa||'novo').replace(/-/g,' ') + '</span></td>';
+      for (var c = 0; c < 8; c++) {
+        var checked = (l.contatos && l.contatos[c]) ? ' checked' : '';
+        h += '<td><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheck(\'' + conId + '\',\'' + l.id + '\',' + c + ',this.checked)"></td>';
+      }
+      h += '<td><button onclick="removeFuLead(\'' + conId + '\',\'' + l.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>';
+      h += '</tr>';
+    });
+  }
+
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function openAddFuLead(conId) {
+  showModal('Adicionar Lead', [
+    { id: 'ful-nome', label: 'Nome', type: 'text' },
+    { id: 'ful-fone', label: 'Telefone', type: 'text' },
+    { id: 'ful-etapa', label: 'Etapa', type: 'select', options: ['novo','em-contato','respondeu','agendado','perdido'] }
+  ], function() {
+    var nome = document.getElementById('ful-nome').value.trim();
+    if (!nome) { document.getElementById('ful-nome').focus(); return; }
+    ensureFuData(conId);
+    var fuMonth = getFuMonth();
+    if (!state.consultores[conId].fuLeads[fuMonth]) state.consultores[conId].fuLeads[fuMonth] = [];
+    state.consultores[conId].fuLeads[fuMonth].push({
+      id: genId(),
+      nome: nome,
+      fone: document.getElementById('ful-fone').value.trim(),
+      etapa: document.getElementById('ful-etapa').value,
+      contatos: [false,false,false,false,false,false,false,false]
+    });
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function editFuLead(conId, leadId) {
+  ensureFuData(conId);
+  var fuMonth = getFuMonth();
+  var list = state.consultores[conId].fuLeads[fuMonth] || [];
+  var l = list.find(function(x){return x.id===leadId;});
+  if (!l) return;
+  showModal('Editar Lead', [
+    { id: 'ful-nome', label: 'Nome', type: 'text', value: l.nome },
+    { id: 'ful-fone', label: 'Telefone', type: 'text', value: l.fone },
+    { id: 'ful-etapa', label: 'Etapa', type: 'select', options: ['novo','em-contato','respondeu','agendado','perdido'], value: l.etapa }
+  ], function() {
+    l.nome = document.getElementById('ful-nome').value.trim();
+    l.fone = document.getElementById('ful-fone').value.trim();
+    l.etapa = document.getElementById('ful-etapa').value;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function toggleFuCheck(conId, leadId, idx, val) {
+  ensureFuData(conId);
+  var fuMonth = getFuMonth();
+  var list = state.consultores[conId].fuLeads[fuMonth] || [];
+  var l = list.find(function(x){return x.id===leadId;});
+  if (!l) return;
+  if (!l.contatos) l.contatos = [false,false,false,false,false,false,false,false];
+  l.contatos[idx] = val;
+  saveState();
+}
+
+function removeFuLead(conId, leadId) {
+  if (!confirm('Remover este lead?')) return;
+  ensureFuData(conId);
+  var fuMonth = getFuMonth();
+  state.consultores[conId].fuLeads[fuMonth] = (state.consultores[conId].fuLeads[fuMonth]||[]).filter(function(x){return x.id!==leadId;});
+  saveState(); renderContent();
+}
+
+// Consultor Faturamento
+function renderConsultorFaturamento(conId, data, fatMonth) {
+  var now = new Date();
+  var h = '';
+  h += '<div class="month-tabs">';
+  for (var mi = 1; mi <= 12; mi++) {
+    var mk = now.getFullYear() + '-' + String(mi).padStart(2,'0');
+    var isActive = mk === fatMonth;
+    var hasData = data.faturamento[mk] && data.faturamento[mk].length > 0;
+    h += '<button class="month-tab' + (isActive?' active':'') + (hasData?' has-data':'') + '" onclick="state.leadMonth=\'' + mk + '\';saveState();renderContent()">' + MESES[mi-1] + '</button>';
+  }
+  h += '</div>';
+
+  var fatList = data.faturamento[fatMonth] || [];
+  var totalMes = 0; fatList.forEach(function(f){ totalMes += (f.valor||0); });
+
+  h += '<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">';
+  h += statCard('Faturamento ' + MESES[parseInt(fatMonth.split('-')[1])-1], 'R$ ' + formatNum(totalMes), fatList.length + ' operações');
+  h += statCard('Operações', fatList.length, 'no mês');
+  h += statCard('Ticket Médio', fatList.length > 0 ? 'R$ ' + formatNum(Math.round(totalMes/fatList.length)) : 'R$ 0', 'por operação');
+  h += '</div>';
+
+  // Botão abrir atendimentos
+  h += '<div style="margin-bottom:12px"><button onclick="var w=document.getElementById(\'consul-fat-table\');w.style.display=w.style.display===\'none\'?\'block\':\'none\'" class="btn btn-outline btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg> Abrir Operações (' + fatList.length + ')</button></div>';
+  h += '<div id="consul-fat-table" style="display:none">';
+  h += '<div class="card"><div class="card-body" style="padding:12px">';
+  h += '<table class="data-table"><thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Crédito</th><th>Data</th><th style="width:30px"></th></tr></thead><tbody>';
+  fatList.forEach(function(f, i) {
+    h += '<tr>';
+    h += '<td style="font-weight:600">' + escHtml(f.cliente||'') + '</td>';
+    h += '<td>' + escHtml(f.produto||'') + '</td>';
+    h += '<td style="color:var(--green);font-weight:700">R$ ' + formatNum(f.valor||0) + '</td>';
+    h += '<td>R$ ' + formatNum(f.credito||0) + '</td>';
+    h += '<td style="color:var(--gray-400)">' + escHtml(f.data||'') + '</td>';
+    h += '<td><button onclick="removeConsulFat(\'' + conId + '\',\'' + fatMonth + '\',' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--red)">×</button></td>';
+    h += '</tr>';
+  });
+  // Inline add row
+  h += '<tr style="background:rgba(20,48,104,0.03)">';
+  h += '<td><input id="cf-cliente" class="form-input" style="font-size:11px;padding:4px 6px" placeholder="Cliente"></td>';
+  h += '<td><input id="cf-produto" class="form-input" style="font-size:11px;padding:4px 6px" placeholder="Produto"></td>';
+  h += '<td><input id="cf-valor" class="form-input" type="number" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Valor"></td>';
+  h += '<td><input id="cf-credito" class="form-input" type="number" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Crédito"></td>';
+  h += '<td><input id="cf-data" class="form-input" style="font-size:11px;padding:4px 6px;width:80px" placeholder="dd/mm"></td>';
+  h += '<td><button class="btn btn-primary" style="padding:4px 8px;font-size:10px" onclick="submitConsulFat(\'' + conId + '\',\'' + fatMonth + '\')">+</button></td>';
+  h += '</tr>';
+  h += '</tbody></table></div></div></div>';
+
+  return h;
+}
+
+function submitConsulFat(conId, month) {
+  var cliente = document.getElementById('cf-cliente').value.trim();
+  if (!cliente) { document.getElementById('cf-cliente').focus(); return; }
+  if (!state.consultores[conId].faturamento[month]) state.consultores[conId].faturamento[month] = [];
+  state.consultores[conId].faturamento[month].push({
+    cliente: cliente,
+    produto: document.getElementById('cf-produto').value.trim(),
+    valor: parseFloat(document.getElementById('cf-valor').value) || 0,
+    credito: parseFloat(document.getElementById('cf-credito').value) || 0,
+    data: document.getElementById('cf-data').value.trim()
+  });
+  saveState(); renderContent();
+}
+
+function removeConsulFat(conId, month, idx) {
+  state.consultores[conId].faturamento[month].splice(idx, 1);
+  saveState(); renderContent();
+}
+
+// Consultor Reuniões
+function renderConsultorReunioes(conId, data) {
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700">Reuniões</h3>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddReuniaoConsultor(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Reunião</button>';
+  h += '</div>';
+
+  var reuns = data.reunioes || [];
+  if (reuns.length === 0) {
+    h += '<div style="text-align:center;padding:40px;color:var(--gray-400)">Nenhuma reunião agendada</div>';
+  } else {
+    var sorted = reuns.slice().sort(function(a,b){ return (a.data||'')+(a.hora||'') < (b.data||'')+(b.hora||'') ? -1 : 1; });
+    sorted.forEach(function(r, i) {
+      h += '<div class="meeting-card">';
+      h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
+      h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div><div class="detail">' + escHtml(r.data||'') + (r.local ? ' — ' + escHtml(r.local) : '') + '</div>';
+      if (r.obs) h += '<div class="detail">' + escHtml(r.obs) + '</div>';
+      h += '</div>';
+      h += '<select onchange="updateConsulReuniao(\'' + conId + '\',' + i + ',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
+      ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
+        h += '<option value="' + st + '"' + (r.status===st?' selected':'') + '>' + st.charAt(0).toUpperCase()+st.slice(1) + '</option>';
+      });
+      h += '</select>';
+      h += '<button onclick="removeConsulReuniao(\'' + conId + '\',' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
+      h += '</div>';
+    });
+  }
+  return h;
+}
+
+function openAddReuniaoConsultor(conId) {
+  showModal('Nova Reunião', [
+    { id: 'rn-lead', label: 'Lead / Cliente', type: 'text' },
+    { id: 'rn-data', label: 'Data', type: 'date' },
+    { id: 'rn-hora', label: 'Horário', type: 'time' },
+    { id: 'rn-local', label: 'Local / Link', type: 'text' },
+    { id: 'rn-obs', label: 'Observações', type: 'textarea' }
+  ], function() {
+    var r = {
+      lead: document.getElementById('rn-lead').value.trim(),
+      data: document.getElementById('rn-data').value,
+      hora: document.getElementById('rn-hora').value,
+      local: document.getElementById('rn-local').value.trim(),
+      obs: document.getElementById('rn-obs').value.trim(),
+      status: 'pendente',
+      consultor: conId
+    };
+    if (!r.lead) { document.getElementById('rn-lead').focus(); return; }
+    state.consultores[conId].reunioes.push(r);
+    state.reunioes.push(r);
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function updateConsulReuniao(conId, idx, val) {
+  state.consultores[conId].reunioes[idx].status = val;
+  saveState();
+}
+
+function removeConsulReuniao(conId, idx) {
+  state.consultores[conId].reunioes.splice(idx, 1);
+  saveState(); renderContent();
+}
+
+// ===== LEADS CRM (GERAL) =====
+function renderLeadCRM() {
+  var el = document.getElementById('app-content');
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700">Pipeline de Leads</h3>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddLead()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
+  h += '</div>';
+
+  h += '<div class="crm-board" id="crm-board-main">';
+  CRM_STAGES.forEach(function(stage) {
+    var leads = [];
+    Object.keys(state.leads).forEach(function(lid) {
+      if (state.leads[lid].stage === stage.key) leads.push(state.leads[lid]);
+    });
+    var colValor = 0; leads.forEach(function(l){ colValor += parseFloat(l.valor)||0; });
+    h += '<div class="crm-col">';
+    h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    h += '<span class="crm-col-title" style="color:' + stage.color + '">' + stage.label + '</span>';
+    h += '<span class="crm-col-count">' + leads.length + '</span>';
+    h += '</div>';
+    if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
+    h += '</div>';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropMainLead(event,\'' + stage.key + '\')">';
+    leads.forEach(function(l) {
+      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')">';
+      h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
+      if (l.telefone) h += '<div class="lead-info"><a href="https://wa.me/' + l.telefone.replace(/\D/g,'') + '" target="_blank" style="color:var(--blue);text-decoration:none;font-size:11px" onclick="event.stopPropagation()">' + escHtml(l.telefone) + '</a></div>';
+      if (l.consultor) { var cn = CONSULTORES.find(function(c){return c.id===l.consultor;}); if(cn) h += '<div class="lead-info">→ ' + escHtml(cn.nome) + '</div>'; }
+      if (l.valor) h += '<div style="font-size:13px;font-weight:700;color:var(--green);margin:4px 0">R$ ' + formatNum(l.valor) + '</div>';
+      h += '<div class="lead-tags" style="margin-top:4px">';
+      if (l.tipo) h += '<span class="tag tag-purple" style="font-size:9px">' + escHtml(l.tipo) + '</span>';
+      if (l.origem) h += '<span class="tag tag-blue" style="font-size:9px">' + escHtml(l.origem) + '</span>';
+      h += '</div>';
+      if (l.stage === 'perdido' && l.motivoPerda) h += '<div style="font-size:10px;color:var(--red);margin-top:4px;font-weight:600">Motivo: ' + escHtml(l.motivoPerda) + '</div>';
+      h += '<div style="margin-top:8px;display:flex;gap:4px">';
+      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="editMainLead(\'' + l.id + '\')">Editar</button>';
+      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="removeMainLead(\'' + l.id + '\')">×</button>';
+      h += '</div></div>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function dropMainLead(e, stage) {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  var lid = e.dataTransfer.getData('text');
+  if (state.leads[lid]) { state.leads[lid].stage = stage; saveState(); renderContent(); }
+}
+
+function openAddLead() {
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;});
+  consulOptions.unshift('— Sem consultor —');
+  showModal('Nova Negociação', [
+    { id: 'nl-nome', label: 'Nome do Cliente', type: 'text' },
+    { id: 'nl-tel', label: 'Telefone', type: 'text' },
+    { id: 'nl-email', label: 'E-mail', type: 'text' },
+    { id: 'nl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS },
+    { id: 'nl-valor', label: 'Valor (R$)', type: 'number' },
+    { id: 'nl-interesse', label: 'Detalhes / Observação', type: 'text' },
+    { id: 'nl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'] },
+    { id: 'nl-consultor', label: 'Consultor', type: 'select', options: consulOptions }
+  ], function() {
+    var lead = {
+      id: genId(), nome: document.getElementById('nl-nome').value.trim(),
+      telefone: document.getElementById('nl-tel').value.trim(),
+      email: document.getElementById('nl-email').value.trim(),
+      tipo: document.getElementById('nl-tipo').value,
+      valor: parseFloat(document.getElementById('nl-valor').value) || 0,
+      interesse: document.getElementById('nl-interesse').value.trim(),
+      origem: document.getElementById('nl-origem').value,
+      stage: 'reuniao-feita', createdAt: new Date().toISOString()
+    };
+    var conNome = document.getElementById('nl-consultor').value;
+    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
+    if (cn) lead.consultor = cn.id;
+    if (!lead.nome) { document.getElementById('nl-nome').focus(); return; }
+    state.leads[lead.id] = lead;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function editMainLead(lid) {
+  var l = state.leads[lid]; if (!l) return;
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Sem consultor —');
+  var curCon = l.consultor ? (CONSULTORES.find(function(c){return c.id===l.consultor;})||{}).nome : '— Sem consultor —';
+  showModal('Editar Negociação', [
+    { id: 'nl-nome', label: 'Nome do Cliente', type: 'text', value: l.nome },
+    { id: 'nl-tel', label: 'Telefone', type: 'text', value: l.telefone },
+    { id: 'nl-email', label: 'E-mail', type: 'text', value: l.email },
+    { id: 'nl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS, value: l.tipo },
+    { id: 'nl-valor', label: 'Valor (R$)', type: 'number', value: l.valor || '' },
+    { id: 'nl-interesse', label: 'Detalhes / Observação', type: 'text', value: l.interesse },
+    { id: 'nl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'], value: l.origem },
+    { id: 'nl-consultor', label: 'Consultor', type: 'select', options: consulOptions, value: curCon },
+    { id: 'nl-stage', label: 'Etapa', type: 'select', options: CRM_STAGES.map(function(s){return s.label;}), value: (CRM_STAGES.find(function(s){return s.key===l.stage;})||{}).label },
+    { id: 'nl-motivo', label: 'Motivo da Perda (se perdido)', type: 'text', value: l.motivoPerda || '' }
+  ], function() {
+    l.nome = document.getElementById('nl-nome').value.trim();
+    l.telefone = document.getElementById('nl-tel').value.trim();
+    l.email = document.getElementById('nl-email').value.trim();
+    l.tipo = document.getElementById('nl-tipo').value;
+    l.valor = parseFloat(document.getElementById('nl-valor').value) || 0;
+    l.interesse = document.getElementById('nl-interesse').value.trim();
+    l.origem = document.getElementById('nl-origem').value;
+    l.motivoPerda = document.getElementById('nl-motivo').value.trim();
+    var conNome = document.getElementById('nl-consultor').value;
+    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
+    l.consultor = cn ? cn.id : '';
+    var stageLabel = document.getElementById('nl-stage').value;
+    var found = CRM_STAGES.find(function(s){return s.label===stageLabel;});
+    if (found) l.stage = found.key;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function removeMainLead(lid) {
+  if (!confirm('Remover este lead?')) return;
+  delete state.leads[lid]; saveState(); renderContent();
+}
+
+// ===== LEADS FOLLOW-UP =====
+function renderLeadFollowup() {
+  var el = document.getElementById('app-content');
+  if (!state.fuLeadsGeral) state.fuLeadsGeral = {};
+  var fuMonth = getFuMonth();
+  var now = new Date();
+  var h = '';
+
+  // Header with month selector
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:17px;font-weight:700">Fluxo de Cadência — Follow Up</h3>';
+  h += '<div style="display:flex;gap:8px;align-items:center">';
+  h += '<select class="form-input" style="width:160px;font-size:13px" onchange="state.leadMonth=this.value;saveState();renderContent()">';
+  for (var mi = 1; mi <= 12; mi++) {
+    var mk = now.getFullYear() + '-' + String(mi).padStart(2,'0');
+    h += '<option value="' + mk + '"' + (mk===fuMonth?' selected':'') + '>' + MESES_FULL[mi-1] + ' ' + now.getFullYear() + '</option>';
+  }
+  h += '</select>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddFuLeadGeral()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar Lead</button>';
+  h += '</div></div>';
+
+  var leads = state.fuLeadsGeral[fuMonth] || [];
+
+  h += '<div class="fu-table-wrap">';
+  h += '<table class="fu-table"><thead><tr><th>Nome</th><th>Número</th><th>Etapa</th><th>1°</th><th>2°</th><th>3°</th><th>4°</th><th>5°</th><th>6°</th><th>7°</th><th>8°</th><th style="width:40px"></th></tr></thead><tbody>';
+
+  if (leads.length === 0) {
+    h += '<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
+  } else {
+    leads.forEach(function(l) {
+      var rowCls = l.etapa ? ' fu-row-' + l.etapa : '';
+      h += '<tr class="' + rowCls + '">';
+      h += '<td class="fu-nome" onclick="editFuLeadGeral(\'' + l.id + '\')">' + escHtml(l.nome) + '</td>';
+      h += '<td>';
+      if (l.fone) h += '<a class="fu-fone" href="https://wa.me/' + l.fone.replace(/\D/g,'') + '" target="_blank">' + escHtml(l.fone) + '</a>';
+      else h += '-';
+      h += '</td>';
+      h += '<td><span class="fu-etapa e-' + (l.etapa||'novo') + '">' + (l.etapa||'novo').replace(/-/g,' ') + '</span></td>';
+      for (var c = 0; c < 8; c++) {
+        var checked = (l.contatos && l.contatos[c]) ? ' checked' : '';
+        h += '<td><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheckGeral(\'' + l.id + '\',' + c + ',this.checked)"></td>';
+      }
+      h += '<td><button onclick="removeFuLeadGeral(\'' + l.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>';
+      h += '</tr>';
+    });
+  }
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+
+function openAddFuLeadGeral() {
+  showModal('Adicionar Lead', [
+    { id: 'fug-nome', label: 'Nome', type: 'text' },
+    { id: 'fug-fone', label: 'Telefone', type: 'text' },
+    { id: 'fug-etapa', label: 'Etapa', type: 'select', options: ['novo','em-contato','respondeu','agendado','perdido'] }
+  ], function() {
+    var nome = document.getElementById('fug-nome').value.trim();
+    if (!nome) { document.getElementById('fug-nome').focus(); return; }
+    if (!state.fuLeadsGeral) state.fuLeadsGeral = {};
+    var fuMonth = getFuMonth();
+    if (!state.fuLeadsGeral[fuMonth]) state.fuLeadsGeral[fuMonth] = [];
+    state.fuLeadsGeral[fuMonth].push({
+      id: genId(),
+      nome: nome,
+      fone: document.getElementById('fug-fone').value.trim(),
+      etapa: document.getElementById('fug-etapa').value,
+      contatos: [false,false,false,false,false,false,false,false]
+    });
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function editFuLeadGeral(leadId) {
+  if (!state.fuLeadsGeral) state.fuLeadsGeral = {};
+  var fuMonth = getFuMonth();
+  var list = state.fuLeadsGeral[fuMonth] || [];
+  var l = list.find(function(x){return x.id===leadId;});
+  if (!l) return;
+  showModal('Editar Lead', [
+    { id: 'fug-nome', label: 'Nome', type: 'text', value: l.nome },
+    { id: 'fug-fone', label: 'Telefone', type: 'text', value: l.fone },
+    { id: 'fug-etapa', label: 'Etapa', type: 'select', options: ['novo','em-contato','respondeu','agendado','perdido'], value: l.etapa }
+  ], function() {
+    l.nome = document.getElementById('fug-nome').value.trim();
+    l.fone = document.getElementById('fug-fone').value.trim();
+    l.etapa = document.getElementById('fug-etapa').value;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function toggleFuCheckGeral(leadId, idx, val) {
+  if (!state.fuLeadsGeral) return;
+  var fuMonth = getFuMonth();
+  var list = state.fuLeadsGeral[fuMonth] || [];
+  var l = list.find(function(x){return x.id===leadId;});
+  if (!l) return;
+  if (!l.contatos) l.contatos = [false,false,false,false,false,false,false,false];
+  l.contatos[idx] = val;
+  saveState();
+}
+
+function removeFuLeadGeral(leadId) {
+  if (!confirm('Remover este lead?')) return;
+  if (!state.fuLeadsGeral) return;
+  var fuMonth = getFuMonth();
+  state.fuLeadsGeral[fuMonth] = (state.fuLeadsGeral[fuMonth]||[]).filter(function(x){return x.id!==leadId;});
+  saveState(); renderContent();
+}
+
+// ===== LEADS REUNIÕES =====
+function renderLeadReunioes() {
+  var el = document.getElementById('app-content');
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700">Reuniões</h3>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddReuniaoGeral()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Reunião</button>';
+  h += '</div>';
+
+  // Filter tabs
+  h += '<div style="display:flex;gap:8px;margin-bottom:16px">';
+  ['todas','pendente','confirmada','realizada','cancelada'].forEach(function(f) {
+    h += '<button onclick="filterReunioes(\'' + f + '\')" class="btn btn-outline btn-sm" style="text-transform:capitalize">' + f + '</button>';
+  });
+  h += '</div>';
+
+  var reuns = state.reunioes || [];
+  if (reuns.length === 0) {
+    h += '<div style="text-align:center;padding:40px;color:var(--gray-400)">Nenhuma reunião agendada</div>';
+  } else {
+    reuns.slice().sort(function(a,b){ return (a.data||'')+(a.hora||'') < (b.data||'')+(b.hora||'') ? -1 : 1; }).forEach(function(r, i) {
+      var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===r.consultor;}); if(cn) conNome = cn.nome;
+      h += '<div class="meeting-card">';
+      h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
+      h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div>';
+      h += '<div class="detail">' + escHtml(r.data||'') + (r.local ? ' — ' + escHtml(r.local) : '') + (conNome ? ' — ' + escHtml(conNome) : '') + '</div>';
+      if (r.obs) h += '<div class="detail">' + escHtml(r.obs) + '</div>';
+      h += '</div>';
+      h += '<select onchange="state.reunioes[' + i + '].status=this.value;saveState()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
+      ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
+        h += '<option value="' + st + '"' + (r.status===st?' selected':'') + '>' + st.charAt(0).toUpperCase()+st.slice(1) + '</option>';
+      });
+      h += '</select>';
+      h += '<button onclick="state.reunioes.splice(' + i + ',1);saveState();renderContent()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
+      h += '</div>';
+    });
+  }
+  el.innerHTML = h;
+}
+
+function openAddReuniaoGeral() {
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Selecionar —');
+  showModal('Nova Reunião', [
+    { id: 'rg-lead', label: 'Lead / Cliente', type: 'text' },
+    { id: 'rg-data', label: 'Data', type: 'date' },
+    { id: 'rg-hora', label: 'Horário', type: 'time' },
+    { id: 'rg-consultor', label: 'Consultor', type: 'select', options: consulOptions },
+    { id: 'rg-local', label: 'Local / Link', type: 'text' },
+    { id: 'rg-obs', label: 'Observações', type: 'textarea' }
+  ], function() {
+    var r = {
+      lead: document.getElementById('rg-lead').value.trim(),
+      data: document.getElementById('rg-data').value,
+      hora: document.getElementById('rg-hora').value,
+      local: document.getElementById('rg-local').value.trim(),
+      obs: document.getElementById('rg-obs').value.trim(),
+      status: 'pendente'
+    };
+    var conNome = document.getElementById('rg-consultor').value;
+    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
+    if (cn) r.consultor = cn.id;
+    if (!r.lead) { document.getElementById('rg-lead').focus(); return; }
+    state.reunioes.push(r);
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+// ===== DEMANDAS =====
+function renderDemandas() {
+  var el = document.getElementById('app-content');
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700">Quadro de Demandas</h3>';
+  h += '<button class="btn btn-primary btn-sm" onclick="openAddDemanda()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Demanda</button>';
+  h += '</div>';
+
+  h += '<div class="demand-board">';
+  DEMAND_STAGES.forEach(function(stage) {
+    var items = state.demandas.filter(function(d){ return d.stage === stage.key; });
+    h += '<div class="demand-col">';
+    h += '<div class="crm-col-header"><span class="crm-col-title" style="color:' + stage.color + '">' + stage.label + '</span><span class="crm-col-count">' + items.length + '</span></div>';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropDemanda(event,\'' + stage.key + '\')">';
+    items.forEach(function(d) {
+      var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===d.responsavel;}); if(cn) conNome = cn.nome;
+      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + d.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')">';
+      h += '<div class="lead-name">' + escHtml(d.titulo||'') + '</div>';
+      if (d.descricao) h += '<div class="lead-info">' + escHtml(d.descricao).substring(0,80) + '</div>';
+      h += '<div class="lead-tags" style="margin-top:6px">';
+      if (d.prioridade) h += '<span class="tag tag-' + (d.prioridade==='alta'?'red':d.prioridade==='media'?'yellow':'gray') + '" style="font-size:9px">' + escHtml(d.prioridade) + '</span>';
+      if (conNome) h += '<span class="tag tag-purple" style="font-size:9px">' + escHtml(conNome) + '</span>';
+      if (d.prazo) h += '<span style="font-size:9px;color:var(--gray-400)">' + escHtml(d.prazo) + '</span>';
+      h += '</div>';
+      h += '<div style="margin-top:6px;display:flex;gap:4px">';
+      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="editDemanda(\'' + d.id + '\')">Editar</button>';
+      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="removeDemanda(\'' + d.id + '\')">×</button>';
+      h += '</div></div>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function dropDemanda(e, stage) {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  var did = e.dataTransfer.getData('text');
+  var d = state.demandas.find(function(x){return x.id===did;});
+  if (d) { d.stage = stage; saveState(); renderContent(); }
+}
+
+function openAddDemanda() {
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Sem responsável —');
+  showModal('Nova Demanda', [
+    { id: 'dm-titulo', label: 'Título', type: 'text' },
+    { id: 'dm-desc', label: 'Descrição', type: 'textarea' },
+    { id: 'dm-responsavel', label: 'Responsável', type: 'select', options: consulOptions },
+    { id: 'dm-prioridade', label: 'Prioridade', type: 'select', options: ['normal','media','alta'] },
+    { id: 'dm-prazo', label: 'Prazo', type: 'date' }
+  ], function() {
+    var d = {
+      id: genId(),
+      titulo: document.getElementById('dm-titulo').value.trim(),
+      descricao: document.getElementById('dm-desc').value.trim(),
+      prioridade: document.getElementById('dm-prioridade').value,
+      prazo: document.getElementById('dm-prazo').value,
+      stage: 'pendente'
+    };
+    var conNome = document.getElementById('dm-responsavel').value;
+    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
+    if (cn) d.responsavel = cn.id;
+    if (!d.titulo) { document.getElementById('dm-titulo').focus(); return; }
+    state.demandas.push(d);
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function editDemanda(did) {
+  var d = state.demandas.find(function(x){return x.id===did;}); if (!d) return;
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Sem responsável —');
+  var curCon = d.responsavel ? (CONSULTORES.find(function(c){return c.id===d.responsavel;})||{}).nome : '— Sem responsável —';
+  showModal('Editar Demanda', [
+    { id: 'dm-titulo', label: 'Título', type: 'text', value: d.titulo },
+    { id: 'dm-desc', label: 'Descrição', type: 'textarea', value: d.descricao },
+    { id: 'dm-responsavel', label: 'Responsável', type: 'select', options: consulOptions, value: curCon },
+    { id: 'dm-prioridade', label: 'Prioridade', type: 'select', options: ['normal','media','alta'], value: d.prioridade },
+    { id: 'dm-prazo', label: 'Prazo', type: 'date', value: d.prazo },
+    { id: 'dm-stage', label: 'Etapa', type: 'select', options: DEMAND_STAGES.map(function(s){return s.label;}), value: (DEMAND_STAGES.find(function(s){return s.key===d.stage;})||{}).label }
+  ], function() {
+    d.titulo = document.getElementById('dm-titulo').value.trim();
+    d.descricao = document.getElementById('dm-desc').value.trim();
+    d.prioridade = document.getElementById('dm-prioridade').value;
+    d.prazo = document.getElementById('dm-prazo').value;
+    var conNome = document.getElementById('dm-responsavel').value;
+    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
+    d.responsavel = cn ? cn.id : '';
+    var stageLabel = document.getElementById('dm-stage').value;
+    var found = DEMAND_STAGES.find(function(s){return s.label===stageLabel;});
+    if (found) d.stage = found.key;
+    saveState(); closeModal(); renderContent();
+  });
+}
+
+function removeDemanda(did) {
+  if (!confirm('Remover demanda?')) return;
+  state.demandas = state.demandas.filter(function(d){return d.id!==did;});
+  saveState(); renderContent();
+}
+
+// ===== CALENDÁRIO =====
+function getCalDayEvents(dateStr) {
+  var events = [];
+  state.reunioes.forEach(function(r) {
+    if (r.data === dateStr) events.push({ tipo: 'reuniao', hora: r.hora||'', horaFim: r.horaFim||'', titulo: r.lead||'Reunião', consultor: r.consultor, id: r.id||'' });
+  });
+  state.demandas.forEach(function(dm) {
+    if (dm.prazo === dateStr) events.push({ tipo: 'demanda', hora: dm.hora||'', horaFim: dm.horaFim||'', titulo: dm.titulo||'', consultor: dm.responsavel, id: dm.id||'' });
+  });
+  (state.calEventos||[]).forEach(function(ev) {
+    if (ev.data === dateStr) events.push({ tipo: ev.tipo||'tarefa', hora: ev.horaInicio||'', horaFim: ev.horaFim||'', titulo: ev.titulo||'', consultor: ev.consultor, id: ev.id, evIdx: true });
+  });
+  events.sort(function(a,b){ return (a.hora||'99') < (b.hora||'99') ? -1 : 1; });
+  return events;
+}
+
+function renderCalendario() {
+  var el = document.getElementById('app-content');
+  var year = state.calYear;
+  var month = state.calMonth;
+  var h = '';
+
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">';
+  h += '<button class="btn btn-outline btn-sm" onclick="navCal(-1)">← Anterior</button>';
+  h += '<h3 style="font-size:18px;font-weight:700">' + MESES_FULL[month] + ' ' + year + '</h3>';
+  h += '<button class="btn btn-outline btn-sm" onclick="navCal(1)">Próximo →</button>';
+  h += '</div>';
+
+  var firstDay = new Date(year, month, 1).getDay();
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var todayStr = today.toISOString().substr(0, 10);
+
+  h += '<div class="cal-grid">';
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(function(d) {
+    h += '<div class="cal-header">' + d + '</div>';
+  });
+
+  var prevDays = new Date(year, month, 0).getDate();
+  for (var i = firstDay - 1; i >= 0; i--) {
+    h += '<div class="cal-day other-month"><div class="day-num">' + (prevDays - i) + '</div></div>';
+  }
+
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var isToday = dateStr === todayStr;
+    var dayEvents = getCalDayEvents(dateStr);
+
+    h += '<div class="cal-day' + (isToday ? ' today' : '') + '" onclick="openCalDay(\'' + dateStr + '\')">';
+    h += '<div class="day-num">' + d + '</div>';
+
+    dayEvents.forEach(function(ev) {
+      var cls = ev.tipo === 'reuniao' ? 'meeting' : ev.tipo === 'demanda' ? 'task' : 'followup';
+      var timeStr = ev.hora ? ev.hora : '';
+      if (ev.hora && ev.horaFim) timeStr = ev.hora + '-' + ev.horaFim;
+      var label = (timeStr ? timeStr + ' ' : '') + escHtml(ev.titulo).substring(0, 14);
+      h += '<div class="cal-event ' + cls + '" title="' + escHtml(ev.titulo) + (ev.hora ? ' (' + timeStr + ')' : '') + '">' + label + '</div>';
+    });
+
+    h += '</div>';
+  }
+
+  var remaining = 7 - ((firstDay + daysInMonth) % 7);
+  if (remaining < 7) {
+    for (var r = 1; r <= remaining; r++) {
+      h += '<div class="cal-day other-month"><div class="day-num">' + r + '</div></div>';
+    }
+  }
+  h += '</div>';
+
+  el.innerHTML = h;
+}
+
+function navCal(dir) {
+  state.calMonth += dir;
+  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  saveState(); renderContent();
+}
+
+function openCalDay(dateStr) {
+  var dayEvents = getCalDayEvents(dateStr);
+  var reuns = state.reunioes.filter(function(r){return r.data===dateStr;});
+  var dems = state.demandas.filter(function(d){return d.prazo===dateStr;});
+  var calEvs = (state.calEventos||[]).filter(function(e){return e.data===dateStr;});
+  var parts = dateStr.split('-');
+  var dayLabel = parseInt(parts[2]) + ' de ' + MESES_FULL[parseInt(parts[1])-1] + ' de ' + parts[0];
+
+  var root = document.getElementById('modal-root');
+  var h = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
+  h += '<div class="modal" style="width:640px">';
+  h += '<div class="modal-header"><h3>' + dayLabel + '</h3>';
+  h += '<button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  h += '</div><div class="modal-body">';
+
+  // Lista de todos os eventos do dia ordenados por hora
+  if (dayEvents.length > 0) {
+    h += '<div style="margin-bottom:16px">';
+    dayEvents.forEach(function(ev) {
+      var tipoColor = ev.tipo==='reuniao' ? 'var(--navy-600)' : ev.tipo==='demanda' ? 'var(--yellow)' : 'var(--green)';
+      var tipoLabel = ev.tipo==='reuniao' ? 'Reunião' : ev.tipo==='demanda' ? 'Demanda' : 'Tarefa';
+      var conNome = ''; if (ev.consultor) { var cn = CONSULTORES.find(function(c){return c.id===ev.consultor;}); if(cn) conNome = cn.nome; }
+      var timeStr = '';
+      if (ev.hora) timeStr = ev.hora;
+      if (ev.hora && ev.horaFim) timeStr = ev.hora + ' — ' + ev.horaFim;
+
+      h += '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--gray-100);border-left:3px solid ' + tipoColor + ';border-radius:0 8px 8px 0;margin-bottom:6px;background:var(--white)">';
+      h += '<div style="min-width:90px;text-align:center"><div style="font-size:14px;font-weight:700;color:var(--navy-600)">' + (timeStr||'--:--') + '</div></div>';
+      h += '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escHtml(ev.titulo) + '</div>';
+      h += '<div style="font-size:11px;color:var(--gray-500);margin-top:2px"><span class="tag" style="font-size:9px;background:' + tipoColor + '15;color:' + tipoColor + '">' + tipoLabel + '</span>';
+      if (conNome) h += ' <span style="color:var(--gray-400)">— ' + escHtml(conNome) + '</span>';
+      h += '</div></div>';
+      if (ev.evIdx) {
+        h += '<button onclick="removeCalEvento(\'' + ev.id + '\',\'' + dateStr + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Remover">×</button>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div style="text-align:center;padding:16px;color:var(--gray-400);font-size:13px;margin-bottom:16px">Nenhum evento neste dia</div>';
+  }
+
+  // Formulário inline para adicionar evento
+  h += '<div style="background:var(--gray-50);border-radius:8px;padding:16px">';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--navy-600)">+ Adicionar Evento</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  h += '<div style="grid-column:1/-1"><input id="cev-titulo" class="form-input" placeholder="Título do evento"></div>';
+  h += '<div><label class="form-label">Tipo</label><select id="cev-tipo" class="form-input"><option value="reuniao">Reunião</option><option value="demanda">Demanda</option><option value="tarefa">Tarefa</option></select></div>';
+  h += '<div><label class="form-label">Consultor</label><select id="cev-consultor" class="form-input"><option value="">— Nenhum —</option>';
+  CONSULTORES.forEach(function(c) { h += '<option value="' + c.id + '">' + escHtml(c.nome) + '</option>'; });
+  h += '</select></div>';
+  h += '<div><label class="form-label">Horário Início</label><input id="cev-inicio" type="time" class="form-input"></div>';
+  h += '<div><label class="form-label">Horário Fim</label><input id="cev-fim" type="time" class="form-input"></div>';
+  h += '<div style="grid-column:1/-1"><textarea id="cev-obs" class="form-input" style="min-height:50px" placeholder="Observações (opcional)"></textarea></div>';
+  h += '<div style="grid-column:1/-1;text-align:right"><button class="btn btn-primary" onclick="addCalEvento(\'' + dateStr + '\')">Adicionar</button></div>';
+  h += '</div></div>';
+
+  h += '</div></div></div>';
+  root.innerHTML = h;
+  setTimeout(function(){ document.getElementById('cev-titulo').focus(); }, 50);
+}
+
+function addCalEvento(dateStr) {
+  var titulo = document.getElementById('cev-titulo').value.trim();
+  if (!titulo) { document.getElementById('cev-titulo').focus(); return; }
+  var ev = {
+    id: genId(),
+    data: dateStr,
+    titulo: titulo,
+    tipo: document.getElementById('cev-tipo').value,
+    consultor: document.getElementById('cev-consultor').value,
+    horaInicio: document.getElementById('cev-inicio').value,
+    horaFim: document.getElementById('cev-fim').value,
+    obs: document.getElementById('cev-obs').value.trim()
+  };
+  if (!state.calEventos) state.calEventos = [];
+  state.calEventos.push(ev);
+  saveState();
+  closeModal();
+  renderContent();
+  setTimeout(function(){ openCalDay(dateStr); }, 50);
+}
+
+function removeCalEvento(evId, dateStr) {
+  state.calEventos = (state.calEventos||[]).filter(function(e){ return e.id !== evId; });
+  saveState();
+  closeModal();
+  renderContent();
+  setTimeout(function(){ openCalDay(dateStr); }, 50);
+}
+
+// ===== FATURAMENTO & METAS =====
+function renderFaturamento() {
+  var el = document.getElementById('app-content');
+  var now = new Date();
+  var h = '';
+
+  // Stats
+  var fatAnual = 0;
+  CONSULTORES.forEach(function(con) {
+    var d = state.consultores[con.id];
+    Object.keys(d.faturamento).forEach(function(mk) {
+      (d.faturamento[mk]||[]).forEach(function(f) { fatAnual += (f.valor||0); });
+    });
+  });
+
+  h += '<div class="stats-grid">';
+  h += statCard('Meta Anual', 'R$ ' + formatNum(state.faturamento.metaAnual), now.getFullYear());
+  h += statCard('Faturamento Total', 'R$ ' + formatNum(fatAnual), 'acumulado');
+  var pct = state.faturamento.metaAnual > 0 ? Math.round(fatAnual / state.faturamento.metaAnual * 100) : 0;
+  h += statCard('Atingimento', pct + '%', 'da meta anual');
+  h += statCard('Falta', 'R$ ' + formatNum(Math.max(0, state.faturamento.metaAnual - fatAnual)), 'para bater');
+  h += '</div>';
+
+  // Meta edit
+  h += '<div class="card" style="margin-bottom:20px"><div class="card-body" style="display:flex;align-items:center;gap:12px">';
+  h += '<span style="font-size:13px;font-weight:600;color:var(--gray-600)">Meta Anual:</span>';
+  h += '<input type="number" class="form-input" style="width:200px" value="' + state.faturamento.metaAnual + '" onchange="state.faturamento.metaAnual=parseFloat(this.value)||0;saveState();renderContent()">';
+  h += '</div></div>';
+
+  // Progress bar
+  h += '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3>Progresso Anual</h3></div><div class="card-body">';
+  h += '<div style="background:var(--gray-100);border-radius:999px;height:28px;overflow:hidden;position:relative">';
+  h += '<div style="width:' + Math.min(100, pct) + '%;height:100%;background:linear-gradient(90deg,var(--navy-600),var(--navy-400));border-radius:999px;transition:width 0.5s"></div>';
+  h += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:' + (pct > 50 ? '#fff' : 'var(--gray-700)') + '">' + pct + '% — R$ ' + formatNum(fatAnual) + ' de R$ ' + formatNum(state.faturamento.metaAnual) + '</div>';
+  h += '</div></div></div>';
+
+  // Chart mensal
+  h += '<div class="card" style="margin-bottom:20px"><div class="card-header"><h3>Faturamento por Mês</h3></div><div class="card-body">';
+  h += '<div class="chart-area" style="position:relative" id="fat-chart">';
+  var maxVal = 1;
+  var monthData = [];
+  for (var mi = 1; mi <= 12; mi++) {
+    var mk = now.getFullYear() + '-' + String(mi).padStart(2,'0');
+    var total = 0;
+    CONSULTORES.forEach(function(con) {
+      (state.consultores[con.id].faturamento[mk]||[]).forEach(function(f){ total += (f.valor||0); });
+    });
+    var metaMes = (state.faturamento.meses[mk] || {}).meta || 0;
+    monthData.push({ month: MESES[mi-1], total: total, meta: metaMes });
+    if (total > maxVal) maxVal = total;
+    if (metaMes > maxVal) maxVal = metaMes;
+  }
+  monthData.forEach(function(d) {
+    var barH = maxVal > 0 ? Math.max(4, (d.total / maxVal) * 200) : 4;
+    var metaH = maxVal > 0 && d.meta > 0 ? (d.meta / maxVal) * 200 : 0;
+    h += '<div class="chart-bar-wrap">';
+    h += '<div style="position:relative;width:100%;height:200px;display:flex;align-items:flex-end">';
+    if (metaH > 0) h += '<div style="position:absolute;bottom:0;width:100%;height:' + metaH + 'px;background:rgba(212,168,67,0.15);border-radius:4px"></div>';
+    h += '<div class="chart-bar" style="height:' + barH + 'px" data-valor="' + d.total + '" onmouseenter="showFatTooltip(event,\'R$ ' + formatNum(d.total) + '\')" onmouseleave="hideFatTooltip()"></div>';
+    h += '</div>';
+    h += '<div class="chart-label">' + d.month + '</div></div>';
+  });
+  h += '<div class="chart-tooltip" id="fat-tooltip"></div>';
+  h += '</div></div></div>';
+
+  // Per consultor
+  h += '<div class="card"><div class="card-header"><h3>Faturamento por Consultor</h3></div><div class="card-body">';
+  h += '<table class="data-table"><thead><tr><th>Consultor</th>';
+  for (var mi = 1; mi <= 12; mi++) h += '<th style="text-align:right">' + MESES[mi-1] + '</th>';
+  h += '<th style="text-align:right">Total</th></tr></thead><tbody>';
+  CONSULTORES.forEach(function(con) {
+    var d = state.consultores[con.id];
+    var total = 0;
+    h += '<tr><td><strong>' + escHtml(con.nome) + '</strong></td>';
+    for (var mi = 1; mi <= 12; mi++) {
+      var mk = now.getFullYear() + '-' + String(mi).padStart(2,'0');
+      var v = 0; (d.faturamento[mk]||[]).forEach(function(f){ v += (f.valor||0); });
+      total += v;
+      h += '<td style="text-align:right;font-size:12px;color:' + (v > 0 ? 'var(--green)' : 'var(--gray-300)') + '">' + (v > 0 ? 'R$ ' + formatNum(v) : '-') + '</td>';
+    }
+    h += '<td style="text-align:right;font-weight:700">R$ ' + formatNum(total) + '</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+
+  el.innerHTML = h;
+}
+
+function showFatTooltip(e, text) {
+  var tip = document.getElementById('fat-tooltip');
+  if (!tip) return;
+  tip.textContent = text;
+  tip.style.display = 'block';
+  tip.style.left = (e.target.getBoundingClientRect().left - document.getElementById('fat-chart').getBoundingClientRect().left) + 'px';
+  tip.style.top = (e.target.offsetTop - 30) + 'px';
+}
+function hideFatTooltip() {
+  var tip = document.getElementById('fat-tooltip'); if (tip) tip.style.display = 'none';
+}
+
+// ===== MODAL SYSTEM =====
+function showModal(title, fields, onSave) {
+  var root = document.getElementById('modal-root');
+  var h = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
+  h += '<div class="modal"><div class="modal-header"><h3>' + escHtml(title) + '</h3>';
+  h += '<button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  h += '</div><div class="modal-body">';
+  fields.forEach(function(f) {
+    h += '<div style="margin-bottom:14px"><label class="form-label">' + f.label + '</label>';
+    if (f.type === 'textarea') {
+      h += '<textarea id="' + f.id + '" class="form-input">' + escHtml(f.value||'') + '</textarea>';
+    } else if (f.type === 'select') {
+      h += '<select id="' + f.id + '" class="form-input">';
+      (f.options||[]).forEach(function(opt) {
+        h += '<option value="' + escHtml(opt) + '"' + (f.value===opt?' selected':'') + '>' + escHtml(opt) + '</option>';
+      });
+      h += '</select>';
+    } else {
+      h += '<input id="' + f.id + '" type="' + f.type + '" class="form-input" value="' + escHtml(f.value||'') + '">';
+    }
+    h += '</div>';
+  });
+  h += '</div><div class="modal-footer">';
+  h += '<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>';
+  h += '<button class="btn btn-primary" id="modal-save-btn">Salvar</button>';
+  h += '</div></div></div>';
+  root.innerHTML = h;
+  document.getElementById('modal-save-btn').onclick = onSave;
+  setTimeout(function(){ var first = root.querySelector('input,select,textarea'); if(first) first.focus(); }, 50);
+}
+
+function showInfoModal(title, bodyHtml) {
+  var root = document.getElementById('modal-root');
+  var h = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
+  h += '<div class="modal"><div class="modal-header"><h3>' + escHtml(title) + '</h3>';
+  h += '<button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  h += '</div><div class="modal-body">' + bodyHtml + '</div></div></div>';
+  root.innerHTML = h;
+}
+
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+// ===== INIT =====
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>
