@@ -264,7 +264,7 @@ select.form-input { cursor: pointer; }
 .modal-body { padding: 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; gap: 8px; justify-content: flex-end; }
 
-/* MEETING */
+/* MEETING CARD (legacy) */
 .meeting-card {
   background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
   padding: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px;
@@ -276,6 +276,87 @@ select.form-input { cursor: pointer; }
 .meeting-info .name { font-size: 13px; font-weight: 600; }
 .meeting-info .detail { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
 .meeting-status { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+
+/* CALENDAR DAY VIEW */
+.cal-toolbar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.cal-toolbar h3 { font-size: 16px; font-weight: 700; margin-right: auto; }
+.cal-nav { display: flex; align-items: center; gap: 6px; }
+.cal-nav button {
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--gray-700);
+  transition: var(--transition);
+}
+.cal-nav button:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.cal-nav .cal-date { font-size: 14px; font-weight: 600; min-width: 180px; text-align: center; }
+.cal-grid-wrapper {
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius);
+  overflow: hidden; position: relative;
+}
+.cal-header-row {
+  display: grid; border-bottom: 2px solid var(--gray-200); background: var(--gray-50);
+}
+.cal-header-cell {
+  padding: 12px 8px; text-align: center; font-size: 12px; font-weight: 700;
+  color: var(--navy-600); text-transform: uppercase; letter-spacing: 0.04em;
+  border-right: 1px solid var(--gray-200);
+}
+.cal-header-cell:first-child { min-width: 60px; max-width: 60px; font-size: 10px; color: var(--gray-400); }
+.cal-header-cell:last-child { border-right: none; }
+.cal-body {
+  display: grid; position: relative; max-height: 600px; overflow-y: auto;
+}
+.cal-time-label {
+  font-size: 10px; font-weight: 600; color: var(--gray-400); text-align: right;
+  padding: 0 8px; min-width: 60px; max-width: 60px; position: relative; top: -7px;
+}
+.cal-row {
+  display: grid; min-height: 48px; border-bottom: 1px solid var(--gray-100);
+}
+.cal-row:hover { background: rgba(59,130,246,0.02); }
+.cal-cell {
+  border-right: 1px solid var(--gray-100); position: relative; cursor: pointer;
+  transition: background 0.1s;
+}
+.cal-cell:last-child { border-right: none; }
+.cal-cell:hover { background: rgba(20,48,104,0.04); }
+.cal-event {
+  position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 4px 6px;
+  font-size: 11px; font-weight: 600; overflow: hidden; cursor: pointer; z-index: 2;
+  transition: box-shadow 0.15s, transform 0.1s;
+  line-height: 1.3;
+}
+.cal-event:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.18); transform: scale(1.02); z-index: 5; }
+.cal-event .ev-lead { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event .ev-time { font-size: 9px; font-weight: 500; opacity: 0.8; }
+.cal-event .ev-local { font-size: 9px; font-weight: 400; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event.st-pendente { background: #FEF3C7; color: #92400E; border-left: 3px solid #F59E0B; }
+.cal-event.st-confirmada { background: #DBEAFE; color: #1E40AF; border-left: 3px solid #3B82F6; }
+.cal-event.st-realizada { background: #D1FAE5; color: #065F46; border-left: 3px solid #22C55E; }
+.cal-event.st-cancelada { background: #FEE2E2; color: #991B1B; border-left: 3px solid #EF4444; opacity: 0.5; }
+.cal-now-line {
+  position: absolute; left: 60px; right: 0; height: 2px; background: var(--red);
+  z-index: 3; pointer-events: none;
+}
+.cal-now-dot {
+  position: absolute; left: 56px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--red); z-index: 3; pointer-events: none; transform: translateY(-4px);
+}
+.cal-legend {
+  display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+.cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-500); }
+.cal-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.cal-list-toggle {
+  display: flex; gap: 4px; background: var(--gray-100); border-radius: 8px; padding: 3px;
+}
+.cal-list-toggle button {
+  padding: 5px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; background: transparent; color: var(--gray-500); transition: var(--transition);
+}
+.cal-list-toggle button.active { background: var(--white); color: var(--navy-600); box-shadow: var(--shadow); }
 
 /* FOLLOWUP */
 .followup-card {
@@ -1355,52 +1436,191 @@ function removeFuLeadGeral(leadId) {
   saveState(); renderContent();
 }
 
-// ===== LEADS REUNIÕES =====
+// ===== REUNIÕES — CALENDAR DAY VIEW =====
+var _calDate = new Date();
+var _calView = 'calendar'; // 'calendar' or 'list'
+var CAL_HOURS_START = 7;
+var CAL_HOURS_END = 21;
+var CAL_COLORS = ['#143068','#3B82F6','#8B5CF6','#22C55E','#F59E0B'];
+
+function calDateStr(d) {
+  var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+function calFormatDate(d) {
+  var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return dias[d.getDay()] + ', ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
+}
+function calPrev() { _calDate.setDate(_calDate.getDate()-1); renderContent(); }
+function calNext() { _calDate.setDate(_calDate.getDate()+1); renderContent(); }
+function calToday() { _calDate = new Date(); renderContent(); }
+function calSetView(v) { _calView = v; renderContent(); }
+
 function renderLeadReunioes() {
   var el = document.getElementById('app-content');
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
-  h += '<h3 style="font-size:16px;font-weight:700">Reuniões</h3>';
+  var dateStr = calDateStr(_calDate);
+  var h = '';
+
+  // Toolbar
+  h += '<div class="cal-toolbar">';
+  h += '<h3>Reuniões</h3>';
+  h += '<div class="cal-list-toggle">';
+  h += '<button class="' + (_calView==='calendar'?'active':'') + '" onclick="calSetView(\'calendar\')">Agenda</button>';
+  h += '<button class="' + (_calView==='list'?'active':'') + '" onclick="calSetView(\'list\')">Lista</button>';
+  h += '</div>';
+  h += '<div class="cal-nav">';
+  h += '<button onclick="calPrev()">‹</button>';
+  h += '<button onclick="calToday()" style="font-size:12px">Hoje</button>';
+  h += '<button onclick="calNext()">›</button>';
+  h += '<span class="cal-date">' + calFormatDate(_calDate) + '</span>';
+  h += '</div>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddReuniaoGeral()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Reunião</button>';
   h += '</div>';
 
-  // Filter tabs
-  h += '<div style="display:flex;gap:8px;margin-bottom:16px">';
-  ['todas','pendente','confirmada','realizada','cancelada'].forEach(function(f) {
-    h += '<button onclick="filterReunioes(\'' + f + '\')" class="btn btn-outline btn-sm" style="text-transform:capitalize">' + f + '</button>';
+  if (_calView === 'list') {
+    h += renderReunioesList();
+    el.innerHTML = h;
+    return;
+  }
+
+  var reuns = (state.reunioes || []).filter(function(r){ return r.data === dateStr; });
+  var colCount = CONSULTORES.length + 1;
+  var gridCols = '60px repeat(' + CONSULTORES.length + ', 1fr)';
+
+  h += '<div class="cal-grid-wrapper">';
+
+  // Header
+  h += '<div class="cal-header-row" style="grid-template-columns:' + gridCols + '">';
+  h += '<div class="cal-header-cell">Hora</div>';
+  CONSULTORES.forEach(function(c, ci) {
+    var count = reuns.filter(function(r){ return r.consultor === c.id; }).length;
+    h += '<div class="cal-header-cell">';
+    h += '<div style="display:flex;align-items:center;justify-content:center;gap:6px">';
+    h += '<span style="width:8px;height:8px;border-radius:50%;background:' + CAL_COLORS[ci % CAL_COLORS.length] + ';display:inline-block"></span>';
+    h += escHtml(c.nome);
+    if (count > 0) h += ' <span style="font-size:9px;background:var(--gray-200);padding:1px 6px;border-radius:99px">' + count + '</span>';
+    h += '</div></div>';
   });
   h += '</div>';
 
-  var reuns = state.reunioes || [];
+  // Body with time slots
+  h += '<div class="cal-body" id="cal-body" style="position:relative">';
+  var rowH = 48;
+
+  for (var hr = CAL_HOURS_START; hr <= CAL_HOURS_END; hr++) {
+    h += '<div class="cal-row" style="grid-template-columns:' + gridCols + '">';
+    h += '<div class="cal-time-label">' + String(hr).padStart(2,'0') + ':00</div>';
+    CONSULTORES.forEach(function(c) {
+      h += '<div class="cal-cell" onclick="openAddReuniaoAt(\'' + c.id + '\',' + hr + ')" title="Agendar ' + escHtml(c.nome) + ' às ' + hr + ':00"></div>';
+    });
+    h += '</div>';
+  }
+
+  // Render events on top
+  reuns.forEach(function(r) {
+    if (!r.hora || !r.consultor) return;
+    var parts = r.hora.split(':');
+    var startH = parseInt(parts[0]) + parseInt(parts[1]||0)/60;
+    var duration = r.duracao || 1;
+    if (startH < CAL_HOURS_START || startH > CAL_HOURS_END) return;
+
+    var ci = -1;
+    CONSULTORES.forEach(function(c, idx) { if (c.id === r.consultor) ci = idx; });
+    if (ci < 0) return;
+
+    var top = (startH - CAL_HOURS_START) * rowH;
+    var height = duration * rowH - 2;
+    var leftPct = ((ci + 1) / colCount * 100);
+    var widthPct = (1 / colCount * 100);
+
+    var stClass = 'st-' + (r.status || 'pendente');
+    var rIdx = (state.reunioes||[]).indexOf(r);
+
+    h += '<div class="cal-event ' + stClass + '" onclick="openEditReuniao(' + rIdx + ')" ';
+    h += 'style="top:' + top + 'px;height:' + height + 'px;left:calc(' + leftPct + '% + 3px);width:calc(' + widthPct + '% - 6px)">';
+    h += '<div class="ev-lead">' + escHtml(r.lead||'') + '</div>';
+    h += '<div class="ev-time">' + escHtml(r.hora) + (r.duracao && r.duracao !== 1 ? ' (' + r.duracao + 'h)' : '') + '</div>';
+    if (r.local) h += '<div class="ev-local">' + escHtml(r.local) + '</div>';
+    h += '</div>';
+  });
+
+  // Current time indicator
+  var now = new Date();
+  if (calDateStr(now) === dateStr) {
+    var nowH = now.getHours() + now.getMinutes()/60;
+    if (nowH >= CAL_HOURS_START && nowH <= CAL_HOURS_END + 1) {
+      var nowTop = (nowH - CAL_HOURS_START) * rowH;
+      h += '<div class="cal-now-dot" style="top:' + nowTop + 'px"></div>';
+      h += '<div class="cal-now-line" style="top:' + nowTop + 'px"></div>';
+    }
+  }
+
+  h += '</div>'; // cal-body
+
+  // Legend
+  h += '<div class="cal-legend">';
+  h += '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:#F59E0B"></div>Pendente</div>';
+  h += '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:#3B82F6"></div>Confirmada</div>';
+  h += '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22C55E"></div>Realizada</div>';
+  h += '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:#EF4444"></div>Cancelada</div>';
+  h += '</div>';
+
+  h += '</div>'; // cal-grid-wrapper
+
+  el.innerHTML = h;
+
+  // Scroll to 8am
+  var body = document.getElementById('cal-body');
+  if (body) body.scrollTop = rowH;
+}
+
+function renderReunioesList() {
+  var dateStr = calDateStr(_calDate);
+  var reuns = (state.reunioes || []).filter(function(r){ return r.data === dateStr; });
+  reuns.sort(function(a,b){ return (a.hora||'') < (b.hora||'') ? -1 : 1; });
+  var h = '';
   if (reuns.length === 0) {
-    h += '<div style="text-align:center;padding:40px;color:var(--gray-400)">Nenhuma reunião agendada</div>';
+    h += '<div style="text-align:center;padding:40px;color:var(--gray-400)">Nenhuma reunião para este dia</div>';
   } else {
-    reuns.slice().sort(function(a,b){ return (a.data||'')+(a.hora||'') < (b.data||'')+(b.hora||'') ? -1 : 1; }).forEach(function(r, i) {
+    reuns.forEach(function(r) {
+      var rIdx = (state.reunioes||[]).indexOf(r);
       var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===r.consultor;}); if(cn) conNome = cn.nome;
       h += '<div class="meeting-card">';
       h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
       h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div>';
-      h += '<div class="detail">' + escHtml(r.data||'') + (r.local ? ' — ' + escHtml(r.local) : '') + (conNome ? ' — ' + escHtml(conNome) : '') + '</div>';
-      if (r.obs) h += '<div class="detail">' + escHtml(r.obs) + '</div>';
+      h += '<div class="detail">' + (r.local ? escHtml(r.local) + ' — ' : '') + escHtml(conNome) + '</div>';
+      if (r.obs) h += '<div class="detail" style="margin-top:2px">' + escHtml(r.obs) + '</div>';
       h += '</div>';
-      h += '<select onchange="state.reunioes[' + i + '].status=this.value;saveState()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
+      h += '<select onchange="state.reunioes[' + rIdx + '].status=this.value;saveState()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
       ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
         h += '<option value="' + st + '"' + (r.status===st?' selected':'') + '>' + st.charAt(0).toUpperCase()+st.slice(1) + '</option>';
       });
       h += '</select>';
-      h += '<button onclick="state.reunioes.splice(' + i + ',1);saveState();renderContent()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
+      h += '<button onclick="openEditReuniao(' + rIdx + ')" class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px">Editar</button>';
+      h += '<button onclick="removeReuniao(' + rIdx + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
       h += '</div>';
     });
   }
-  el.innerHTML = h;
+  return h;
 }
 
-function openAddReuniaoGeral() {
+function removeReuniao(idx) {
+  if (!confirm('Remover esta reunião?')) return;
+  state.reunioes.splice(idx, 1);
+  saveState(); renderContent();
+}
+
+function openAddReuniaoAt(consultorId, hora) {
   var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Selecionar —');
+  var cn = CONSULTORES.find(function(c){return c.id===consultorId;});
+  var preselect = cn ? cn.nome : '— Selecionar —';
   showModal('Nova Reunião', [
     { id: 'rg-lead', label: 'Lead / Cliente', type: 'text' },
-    { id: 'rg-data', label: 'Data', type: 'date' },
-    { id: 'rg-hora', label: 'Horário', type: 'time' },
-    { id: 'rg-consultor', label: 'Consultor', type: 'select', options: consulOptions },
+    { id: 'rg-data', label: 'Data', type: 'date', value: calDateStr(_calDate) },
+    { id: 'rg-hora', label: 'Horário', type: 'time', value: String(hora).padStart(2,'0') + ':00' },
+    { id: 'rg-duracao', label: 'Duração (horas)', type: 'number', value: '1' },
+    { id: 'rg-consultor', label: 'Consultor', type: 'select', options: consulOptions, value: preselect },
     { id: 'rg-local', label: 'Local / Link', type: 'text' },
     { id: 'rg-obs', label: 'Observações', type: 'textarea' }
   ], function() {
@@ -1408,17 +1628,71 @@ function openAddReuniaoGeral() {
       lead: document.getElementById('rg-lead').value.trim(),
       data: document.getElementById('rg-data').value,
       hora: document.getElementById('rg-hora').value,
+      duracao: parseFloat(document.getElementById('rg-duracao').value) || 1,
       local: document.getElementById('rg-local').value.trim(),
       obs: document.getElementById('rg-obs').value.trim(),
       status: 'pendente'
     };
     var conNome = document.getElementById('rg-consultor').value;
-    var cn = CONSULTORES.find(function(c){return c.nome===conNome;});
-    if (cn) r.consultor = cn.id;
+    var cnSel = CONSULTORES.find(function(c){return c.nome===conNome;});
+    if (cnSel) r.consultor = cnSel.id;
     if (!r.lead) { document.getElementById('rg-lead').focus(); return; }
     state.reunioes.push(r);
     saveState(); closeModal(); renderContent();
   });
+  setTimeout(function() {
+    var selEl = document.getElementById('rg-consultor');
+    if (selEl) selEl.value = preselect;
+    var durEl = document.getElementById('rg-duracao');
+    if (durEl) { durEl.min = '0.5'; durEl.step = '0.5'; }
+  }, 100);
+}
+
+function openAddReuniaoGeral() {
+  openAddReuniaoAt('', new Date().getHours());
+}
+
+function openEditReuniao(idx) {
+  var r = state.reunioes[idx];
+  if (!r) return;
+  var consulOptions = CONSULTORES.map(function(c){return c.nome;}); consulOptions.unshift('— Selecionar —');
+  var cn = CONSULTORES.find(function(c){return c.id===r.consultor;});
+  var preselect = cn ? cn.nome : '— Selecionar —';
+  showModal('Editar Reunião', [
+    { id: 'rg-lead', label: 'Lead / Cliente', type: 'text', value: r.lead||'' },
+    { id: 'rg-data', label: 'Data', type: 'date', value: r.data||'' },
+    { id: 'rg-hora', label: 'Horário', type: 'time', value: r.hora||'' },
+    { id: 'rg-duracao', label: 'Duração (horas)', type: 'number', value: String(r.duracao||1) },
+    { id: 'rg-consultor', label: 'Consultor', type: 'select', options: consulOptions, value: preselect },
+    { id: 'rg-status', label: 'Status', type: 'select', options: ['pendente','confirmada','realizada','cancelada'], value: r.status||'pendente' },
+    { id: 'rg-local', label: 'Local / Link', type: 'text', value: r.local||'' },
+    { id: 'rg-obs', label: 'Observações', type: 'textarea', value: r.obs||'' }
+  ], function() {
+    r.lead = document.getElementById('rg-lead').value.trim();
+    r.data = document.getElementById('rg-data').value;
+    r.hora = document.getElementById('rg-hora').value;
+    r.duracao = parseFloat(document.getElementById('rg-duracao').value) || 1;
+    r.local = document.getElementById('rg-local').value.trim();
+    r.obs = document.getElementById('rg-obs').value.trim();
+    r.status = document.getElementById('rg-status').value;
+    var conNome = document.getElementById('rg-consultor').value;
+    var cnSel = CONSULTORES.find(function(c){return c.nome===conNome;});
+    r.consultor = cnSel ? cnSel.id : '';
+    saveState(); closeModal(); renderContent();
+  }, 'Salvar', function() {
+    if (confirm('Remover esta reunião?')) {
+      state.reunioes.splice(idx, 1);
+      saveState(); closeModal(); renderContent();
+    }
+  });
+  setTimeout(function() {
+    var selEl = document.getElementById('rg-consultor');
+    if (selEl) selEl.value = preselect;
+    var stEl = document.getElementById('rg-status');
+    if (stEl) stEl.value = r.status||'pendente';
+    var durEl = document.getElementById('rg-duracao');
+    if (durEl) { durEl.min = '0.5'; durEl.step = '0.5'; }
+  }, 100);
 }
 
 // ===== DEMANDAS =====
@@ -1837,7 +2111,7 @@ function hideFatTooltip() {
 }
 
 // ===== MODAL SYSTEM =====
-function showModal(title, fields, onSave) {
+function showModal(title, fields, onSave, saveLabel, onDelete) {
   var root = document.getElementById('modal-root');
   var h = '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">';
   h += '<div class="modal"><div class="modal-header"><h3>' + escHtml(title) + '</h3>';
@@ -1859,11 +2133,13 @@ function showModal(title, fields, onSave) {
     h += '</div>';
   });
   h += '</div><div class="modal-footer">';
+  if (onDelete) h += '<button class="btn" id="modal-delete-btn" style="background:var(--red);color:#fff;margin-right:auto">Excluir</button>';
   h += '<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>';
-  h += '<button class="btn btn-primary" id="modal-save-btn">Salvar</button>';
+  h += '<button class="btn btn-primary" id="modal-save-btn">' + escHtml(saveLabel||'Salvar') + '</button>';
   h += '</div></div></div>';
   root.innerHTML = h;
   document.getElementById('modal-save-btn').onclick = onSave;
+  if (onDelete) document.getElementById('modal-delete-btn').onclick = onDelete;
   setTimeout(function(){ var first = root.querySelector('input,select,textarea'); if(first) first.focus(); }, 50);
 }
 
