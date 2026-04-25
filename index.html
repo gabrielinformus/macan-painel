@@ -656,6 +656,7 @@ function renderSidebar() {
   }
   h += navItem('demandas', '', 'Demandas', '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>');
   h += navItem('calendario', '', 'Calendário', '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
+  h += navItem('reunioes', '', 'Reuniões', '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>');
   h += '</div>';
 
   h += '<div class="nav-section"><div class="nav-section-title">Financeiro</div>';
@@ -696,7 +697,8 @@ function renderContent() {
       else { title = 'Leads MACAN — CRM'; state.submodule = 'crm'; renderLeadCRM(); }
       break;
     case 'demandas': title = 'Demandas'; renderDemandas(); break;
-    case 'calendario': title = 'Calendário'; renderLeadReunioes(); break;
+    case 'calendario': title = 'Calendário'; renderCalendario(); break;
+    case 'reunioes': title = 'Reuniões'; renderLeadReunioes(); break;
     case 'faturamento': title = 'Faturamento'; renderFaturamento(); break;
   }
   document.getElementById('topbar-title').textContent = title;
