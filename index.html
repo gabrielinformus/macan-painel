@@ -629,6 +629,48 @@ select.form-input { cursor: pointer; }
 .prod-label { font-size: 11px; font-weight: 600; color: var(--gray-400); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .hidden { display: none !important; }
+
+/* HAMBURGER */
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; margin-right: 10px; }
+.hamburger svg { width: 24px; height: 24px; stroke: var(--navy-600); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 200;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; }
+  .main { margin-left: 0 !important; }
+  .topbar { padding: 12px 16px; }
+  .topbar h2 { font-size: 16px; }
+  .hamburger { display: block; }
+  .content { padding: 16px !important; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .demand-board { grid-template-columns: 1fr !important; }
+  .prod-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .ranking-card { padding: 16px !important; }
+  .data-table { font-size: 11px; }
+  .data-table th, .data-table td { padding: 6px 8px; }
+  .card { border-radius: 12px; }
+  .card-body { padding: 14px; }
+  .modal { width: 95vw !important; max-height: 90vh; overflow-y: auto; }
+  .login-box { width: 92vw !important; padding: 32px 24px !important; }
+  .ticker-bar { font-size: 12px; }
+  .topbar-right span { display: none; }
+  .topbar-right span:last-of-type { display: inline; }
+  .dash-2col { grid-template-columns: 1fr !important; }
+  .dash-4col { grid-template-columns: repeat(2, 1fr) !important; }
+  .crm-board { overflow-x: auto; }
+  .data-table { min-width: 500px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .topbar h2 { font-size: 14px; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -665,9 +707,13 @@ select.form-input { cursor: pointer; }
 </aside>
 
 <!-- MAIN -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="main">
   <div class="topbar">
-    <h2 id="topbar-title">Dashboard</h2>
+    <div style="display:flex;align-items:center">
+      <button class="hamburger" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <h2 id="topbar-title">Dashboard</h2>
+    </div>
     <div class="topbar-right">
       <span style="font-size:12px;color:var(--gray-400);font-weight:500" id="topbar-date"></span>
       <span style="font-size:12px;font-weight:600;color:var(--navy-600)" id="topbar-user"></span>
@@ -927,6 +973,7 @@ function switchModule(mod, sub) {
   state.submodule = sub || '';
   if (myId && mod === 'consultores') state.consultor = myId;
   saveState();
+  closeSidebar();
   renderSidebar();
   renderContent();
 }
@@ -1001,6 +1048,7 @@ function selectConsultor(id) {
   state.consultor = id;
   state.module = 'consultores';
   saveState();
+  closeSidebar();
   renderSidebar();
   renderContent();
 }
@@ -1296,7 +1344,7 @@ function renderDashboard() {
   h += '</div>';
 
   // ===== RANKING + VENDAS POR PRODUTO (side by side) =====
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;align-items:start">';
+  h += '<div class="dash-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;align-items:start">';
 
   // Ranking
   h += '<div class="ranking-card">';
@@ -1555,7 +1603,7 @@ function renderConsultorCRM(conId, data) {
     if (l.valor) totalValor += parseFloat(l.valor) || 0;
     if (l.stage === 'venda-fechada') { totalFechado++; totalFechadoValor += parseFloat(l.valor) || 0; }
   });
-  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  h += '<div class="dash-4col" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--navy-600)"><div class="label">Total Negociações</div><div class="value" style="font-size:22px;color:var(--navy-600)">' + totalLeads + '</div></div>';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--blue)"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--blue)">R$ ' + formatNum(totalValor) + '</div></div>';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
@@ -1945,7 +1993,7 @@ function renderLeadCRM() {
     if (l.valor) totalValor += parseFloat(l.valor) || 0;
     if (l.stage === 'venda-fechada') { totalFechado++; totalFechadoValor += parseFloat(l.valor) || 0; }
   });
-  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  h += '<div class="dash-4col" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--navy-600)"><div class="label">Total Negociações</div><div class="value" style="font-size:22px;color:var(--navy-600)">' + totalLeads + '</div></div>';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--blue)"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--blue)">R$ ' + formatNum(totalValor) + '</div></div>';
   h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
@@ -2974,6 +3022,8 @@ var AUTH_USERS = [
 var _currentUser = null;
 
 function isAdmin() { return _currentUser && (_currentUser.role === 'admin' || _currentUser.role === 'equipe'); }
+function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open'); }
+function closeSidebar() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open'); }
 function getConsultorId() { if (!_currentUser || isAdmin()) return null; return _currentUser.user; }
 
 function uploadLogo() {
