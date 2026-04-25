@@ -1392,12 +1392,26 @@ function openAddReuniaoConsultor(conId) {
 // ===== LEADS CRM (GERAL) =====
 function renderLeadCRM() {
   var el = document.getElementById('app-content');
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
-  h += '<h3 style="font-size:16px;font-weight:700">Pipeline de Leads</h3>';
+  var h = '<div style="margin-bottom:16px">';
+  h += '<h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Pipeline de Leads</h3>';
   h += '<div style="display:flex;gap:8px">';
   h += '<button class="btn btn-outline btn-sm" onclick="addCrmStage()">+ Coluna</button>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddLead()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
   h += '</div></div>';
+
+  // Summary cards
+  var totalLeads = 0, totalValor = 0, totalFechado = 0, totalFechadoValor = 0;
+  Object.keys(state.leads).forEach(function(lid) {
+    var l = state.leads[lid]; totalLeads++;
+    if (l.valor) totalValor += parseFloat(l.valor) || 0;
+    if (l.stage === 'venda-fechada') { totalFechado++; totalFechadoValor += parseFloat(l.valor) || 0; }
+  });
+  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--navy-600)"><div class="label">Total Negociações</div><div class="value" style="font-size:22px;color:var(--navy-600)">' + totalLeads + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--blue)"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--blue)">R$ ' + formatNum(totalValor) + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Valor Fechado</div><div class="value" style="font-size:22px;color:var(--green)">R$ ' + formatNum(totalFechadoValor) + '</div></div>';
+  h += '</div>';
 
   var stages = getCrmStages();
   h += '<div class="crm-board" id="crm-board-main">';
