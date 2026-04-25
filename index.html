@@ -1015,12 +1015,32 @@ function getConsulAvatar(conId) {
 }
 
 function setConsulFoto(conId) {
-  var url = prompt('Cole a URL da foto do consultor (imagem quadrada):');
-  if (url !== null && url.trim()) {
-    if (!state.consulFotos) state.consulFotos = {};
-    state.consulFotos[conId] = url.trim();
-    saveState(); renderContent();
-  }
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = function() {
+    var file = inp.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var size = 120;
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        var min = Math.min(img.width, img.height);
+        var sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        if (!state.consulFotos) state.consulFotos = {};
+        state.consulFotos[conId] = canvas.toDataURL('image/jpeg', 0.8);
+        saveState(); renderContent();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
 }
 
 function renderTicker() {
