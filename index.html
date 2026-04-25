@@ -1494,42 +1494,41 @@ function renderLeadReunioes() {
   h += '<div class="cal-body" id="cal-body" style="position:relative">';
   var rowH = 48;
 
+  // Build lookup: which events start at which hour for which consultant
+  var eventMap = {};
+  reuns.forEach(function(r) {
+    if (!r.hora || !r.consultor) return;
+    var parts = r.hora.split(':');
+    var startHour = parseInt(parts[0]);
+    if (startHour < CAL_HOURS_START || startHour > CAL_HOURS_END) return;
+    var key = startHour + '_' + r.consultor;
+    if (!eventMap[key]) eventMap[key] = [];
+    eventMap[key].push(r);
+  });
+
   for (var hr = CAL_HOURS_START; hr <= CAL_HOURS_END; hr++) {
     h += '<div class="cal-row" style="grid-template-columns:' + gridCols + '">';
     h += '<div class="cal-time-label">' + String(hr).padStart(2,'0') + ':00</div>';
     CONSULTORES.forEach(function(c) {
-      h += '<div class="cal-cell" onclick="openAddReuniaoAt(\'' + c.id + '\',' + hr + ')" title="Agendar ' + escHtml(c.nome) + ' às ' + hr + ':00"></div>';
+      var key = hr + '_' + c.id;
+      var cellEvents = eventMap[key] || [];
+      h += '<div class="cal-cell" onclick="openAddReuniaoAt(\'' + c.id + '\',' + hr + ')" title="Agendar ' + escHtml(c.nome) + ' às ' + hr + ':00">';
+      cellEvents.forEach(function(r) {
+        var duration = r.duracao || 1;
+        var height = duration * rowH - 4;
+        var stClass = 'st-' + (r.status || 'pendente');
+        var rIdx = (state.reunioes||[]).indexOf(r);
+        h += '<div class="cal-event ' + stClass + '" onclick="event.stopPropagation();openEditReuniao(' + rIdx + ')" ';
+        h += 'style="position:relative;height:' + height + 'px;left:0;right:0;width:100%;margin-bottom:2px' + (duration > 1 ? ';z-index:2' : '') + '">';
+        h += '<div class="ev-lead">' + escHtml(r.lead||'') + '</div>';
+        h += '<div class="ev-time">' + escHtml(r.hora) + (r.duracao && r.duracao !== 1 ? ' (' + r.duracao + 'h)' : '') + '</div>';
+        if (r.local) h += '<div class="ev-local">' + escHtml(r.local) + '</div>';
+        h += '</div>';
+      });
+      h += '</div>';
     });
     h += '</div>';
   }
-
-  // Render events on top
-  reuns.forEach(function(r) {
-    if (!r.hora || !r.consultor) return;
-    var parts = r.hora.split(':');
-    var startH = parseInt(parts[0]) + parseInt(parts[1]||0)/60;
-    var duration = r.duracao || 1;
-    if (startH < CAL_HOURS_START || startH > CAL_HOURS_END) return;
-
-    var ci = -1;
-    CONSULTORES.forEach(function(c, idx) { if (c.id === r.consultor) ci = idx; });
-    if (ci < 0) return;
-
-    var top = (startH - CAL_HOURS_START) * rowH;
-    var height = duration * rowH - 2;
-    var leftPct = ((ci + 1) / colCount * 100);
-    var widthPct = (1 / colCount * 100);
-
-    var stClass = 'st-' + (r.status || 'pendente');
-    var rIdx = (state.reunioes||[]).indexOf(r);
-
-    h += '<div class="cal-event ' + stClass + '" onclick="openEditReuniao(' + rIdx + ')" ';
-    h += 'style="top:' + top + 'px;height:' + height + 'px;left:calc(' + leftPct + '% + 3px);width:calc(' + widthPct + '% - 6px)">';
-    h += '<div class="ev-lead">' + escHtml(r.lead||'') + '</div>';
-    h += '<div class="ev-time">' + escHtml(r.hora) + (r.duracao && r.duracao !== 1 ? ' (' + r.duracao + 'h)' : '') + '</div>';
-    if (r.local) h += '<div class="ev-local">' + escHtml(r.local) + '</div>';
-    h += '</div>';
-  });
 
   // Current time indicator
   var now = new Date();
