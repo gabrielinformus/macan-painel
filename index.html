@@ -550,6 +550,20 @@ function ensureState(s) {
   if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
   if (!s.faturamento.meses) s.faturamento.meses = {};
   if (!s.calEventos) s.calEventos = [];
+  // Migração: reuniões de consultores → state.reunioes (fonte única)
+  CONSULTORES.forEach(function(c) {
+    var conReuns = s.consultores[c.id].reunioes || [];
+    if (conReuns.length > 0) {
+      conReuns.forEach(function(r) {
+        if (!r.consultor) r.consultor = c.id;
+        var exists = s.reunioes.some(function(er) {
+          return er.lead === r.lead && er.data === r.data && er.hora === r.hora && er.consultor === r.consultor;
+        });
+        if (!exists) s.reunioes.push(r);
+      });
+      s.consultores[c.id].reunioes = [];
+    }
+  });
   return s;
 }
 
@@ -746,7 +760,7 @@ function renderDashboard() {
     Object.keys(d.crm).forEach(function(lid) { leads++; if (d.crm[lid].stage === 'fechado') fechados++; });
     var fatArr = d.faturamento[mesKey] || [];
     fatArr.forEach(function(f) { fat += (f.valor||0); });
-    reuns = d.reunioes.filter(function(r){ return r.data && r.data.substr(0,7) === mesKey; }).length;
+    reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === con.id && r.data && r.data.substr(0,7) === mesKey; }).length;
     h += '<tr>';
     h += '<td><strong>' + escHtml(con.nome) + '</strong></td>';
     h += '<td>' + leads + '</td>';
@@ -759,7 +773,7 @@ function renderDashboard() {
   h += '</tbody></table></div></div>';
 
   // Últimas reuniões
-  h += '<div class="card"><div class="card-header"><h3>Próximas Reuniões</h3><button class="btn btn-primary btn-sm" onclick="switchModule(\'leads\',\'reunioes\')">Ver Todas</button></div><div class="card-body">';
+  h += '<div class="card"><div class="card-header"><h3>Próximas Reuniões</h3><button class="btn btn-primary btn-sm" onclick="switchModule(\'reunioes\',\'\')">Ver Todas</button></div><div class="card-body">';
   var proxReun = state.reunioes.filter(function(r){ return r.data >= today.toISOString().substr(0,10); }).sort(function(a,b){ return a.data < b.data ? -1 : 1; }).slice(0,5);
   if (proxReun.length === 0) {
     h += '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Nenhuma reunião agendada</div>';
@@ -1139,30 +1153,32 @@ function removeConsulFat(conId, month, idx) {
   saveState(); renderContent();
 }
 
-// Consultor Reuniões
+// Consultor Reuniões — lê de state.reunioes (fonte única)
 function renderConsultorReunioes(conId, data) {
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
   h += '<h3 style="font-size:16px;font-weight:700">Reuniões</h3>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddReuniaoConsultor(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Reunião</button>';
   h += '</div>';
 
-  var reuns = data.reunioes || [];
+  var reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === conId; });
   if (reuns.length === 0) {
     h += '<div style="text-align:center;padding:40px;color:var(--gray-400)">Nenhuma reunião agendada</div>';
   } else {
     var sorted = reuns.slice().sort(function(a,b){ return (a.data||'')+(a.hora||'') < (b.data||'')+(b.hora||'') ? -1 : 1; });
-    sorted.forEach(function(r, i) {
+    sorted.forEach(function(r) {
+      var rIdx = state.reunioes.indexOf(r);
       h += '<div class="meeting-card">';
       h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
       h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div><div class="detail">' + escHtml(r.data||'') + (r.local ? ' — ' + escHtml(r.local) : '') + '</div>';
       if (r.obs) h += '<div class="detail">' + escHtml(r.obs) + '</div>';
       h += '</div>';
-      h += '<select onchange="updateConsulReuniao(\'' + conId + '\',' + i + ',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
+      h += '<select onchange="state.reunioes[' + rIdx + '].status=this.value;saveState()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
       ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
         h += '<option value="' + st + '"' + (r.status===st?' selected':'') + '>' + st.charAt(0).toUpperCase()+st.slice(1) + '</option>';
       });
       h += '</select>';
-      h += '<button onclick="removeConsulReuniao(\'' + conId + '\',' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
+      h += '<button onclick="openEditReuniao(' + rIdx + ')" class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px">Editar</button>';
+      h += '<button onclick="removeReuniao(' + rIdx + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px">×</button>';
       h += '</div>';
     });
   }
@@ -1170,37 +1186,7 @@ function renderConsultorReunioes(conId, data) {
 }
 
 function openAddReuniaoConsultor(conId) {
-  showModal('Nova Reunião', [
-    { id: 'rn-lead', label: 'Lead / Cliente', type: 'text' },
-    { id: 'rn-data', label: 'Data', type: 'date' },
-    { id: 'rn-hora', label: 'Horário', type: 'time' },
-    { id: 'rn-local', label: 'Local / Link', type: 'text' },
-    { id: 'rn-obs', label: 'Observações', type: 'textarea' }
-  ], function() {
-    var r = {
-      lead: document.getElementById('rn-lead').value.trim(),
-      data: document.getElementById('rn-data').value,
-      hora: document.getElementById('rn-hora').value,
-      local: document.getElementById('rn-local').value.trim(),
-      obs: document.getElementById('rn-obs').value.trim(),
-      status: 'pendente',
-      consultor: conId
-    };
-    if (!r.lead) { document.getElementById('rn-lead').focus(); return; }
-    state.consultores[conId].reunioes.push(r);
-    state.reunioes.push(r);
-    saveState(); closeModal(); renderContent();
-  });
-}
-
-function updateConsulReuniao(conId, idx, val) {
-  state.consultores[conId].reunioes[idx].status = val;
-  saveState();
-}
-
-function removeConsulReuniao(conId, idx) {
-  state.consultores[conId].reunioes.splice(idx, 1);
-  saveState(); renderContent();
+  openAddReuniaoAt(conId, new Date().getHours());
 }
 
 // ===== LEADS CRM (GERAL) =====
