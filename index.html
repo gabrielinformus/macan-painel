@@ -1813,13 +1813,12 @@ function renderConsultorFaturamento(conId, data, fatMonth) {
   h += '<div style="margin-bottom:12px"><button onclick="var w=document.getElementById(\'consul-fat-table\');w.style.display=w.style.display===\'none\'?\'block\':\'none\'" class="btn btn-outline btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg> Abrir Operações (' + fatList.length + ')</button></div>';
   h += '<div id="consul-fat-table" style="display:none">';
   h += '<div class="card"><div class="card-body" style="padding:12px">';
-  h += '<table class="data-table"><thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Crédito</th><th>Data</th><th style="width:30px"></th></tr></thead><tbody>';
+  h += '<table class="data-table"><thead><tr><th>Cliente</th><th>Produto</th><th>Valor</th><th>Data</th><th style="width:30px"></th></tr></thead><tbody>';
   fatList.forEach(function(f, i) {
     h += '<tr>';
     h += '<td style="font-weight:600">' + escHtml(f.cliente||'') + '</td>';
     h += '<td>' + escHtml(f.produto||'') + '</td>';
     h += '<td style="color:var(--green);font-weight:700">R$ ' + formatNum(f.valor||0) + '</td>';
-    h += '<td>R$ ' + formatNum(f.credito||0) + '</td>';
     h += '<td style="color:var(--gray-400)">' + escHtml(f.data||'') + '</td>';
     h += '<td><button onclick="removeConsulFat(\'' + conId + '\',\'' + fatMonth + '\',' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--red)">×</button></td>';
     h += '</tr>';
@@ -1827,9 +1826,8 @@ function renderConsultorFaturamento(conId, data, fatMonth) {
   // Inline add row
   h += '<tr style="background:rgba(20,48,104,0.03)">';
   h += '<td><input id="cf-cliente" class="form-input" style="font-size:11px;padding:4px 6px" placeholder="Cliente"></td>';
-  h += '<td><input id="cf-produto" class="form-input" style="font-size:11px;padding:4px 6px" placeholder="Produto"></td>';
+  h += '<td><select id="cf-produto" class="form-input" style="font-size:11px;padding:4px 6px" onchange="if(this.value===\'__outro\'){this.style.display=\'none\';document.getElementById(\'cf-produto-custom\').style.display=\'block\';document.getElementById(\'cf-produto-custom\').focus();}"><option value="">Selecione...</option><option value="Imóvel">Imóvel</option><option value="Veículos">Veículos</option><option value="Alavancagem Patrimonial">Alavancagem Patrimonial</option><option value="__outro">Outro (digitar)</option></select><input id="cf-produto-custom" class="form-input" style="font-size:11px;padding:4px 6px;display:none" placeholder="Produto personalizado"></td>';
   h += '<td><input id="cf-valor" class="form-input" type="number" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Valor"></td>';
-  h += '<td><input id="cf-credito" class="form-input" type="number" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Crédito"></td>';
   h += '<td><input id="cf-data" class="form-input" style="font-size:11px;padding:4px 6px;width:80px" placeholder="dd/mm"></td>';
   h += '<td><button class="btn btn-primary" style="padding:4px 8px;font-size:10px" onclick="submitConsulFat(\'' + conId + '\',\'' + fatMonth + '\')">+</button></td>';
   h += '</tr>';
@@ -1842,11 +1840,13 @@ function submitConsulFat(conId, month) {
   var cliente = document.getElementById('cf-cliente').value.trim();
   if (!cliente) { document.getElementById('cf-cliente').focus(); return; }
   if (!state.consultores[conId].faturamento[month]) state.consultores[conId].faturamento[month] = [];
+  var selProduto = document.getElementById('cf-produto');
+  var customProduto = document.getElementById('cf-produto-custom');
+  var produto = (selProduto.value === '__outro' || selProduto.style.display === 'none') ? customProduto.value.trim() : selProduto.value;
   state.consultores[conId].faturamento[month].push({
     cliente: cliente,
-    produto: document.getElementById('cf-produto').value.trim(),
+    produto: produto,
     valor: parseFloat(document.getElementById('cf-valor').value) || 0,
-    credito: parseFloat(document.getElementById('cf-credito').value) || 0,
     data: document.getElementById('cf-data').value.trim()
   });
   saveState(); renderContent();
