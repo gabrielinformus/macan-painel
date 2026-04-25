@@ -922,13 +922,13 @@ function renderConsultorCRM(conId, data) {
     h += '</div>';
     h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')">';
     leads.forEach(function(l) {
-      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')">';
+      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')" onclick="editConsulLead(\'' + conId + '\',\'' + l.id + '\')" style="cursor:pointer">';
       h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
+      if (l.valor) h += '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px">R$ ' + formatNum(l.valor) + '</div>';
       if (l.origem) h += '<div class="lead-tags" style="margin-top:4px"><span class="tag tag-blue" style="font-size:9px">' + escHtml(l.origem) + '</span></div>';
       h += '<div style="margin-top:8px;display:flex;gap:4px">';
-      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="editConsulLead(\'' + conId + '\',\'' + l.id + '\')">Editar</button>';
-      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="dupConsulLead(\'' + conId + '\',\'' + l.id + '\')" title="Duplicar">⧉</button>';
-      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="removeConsulLead(\'' + conId + '\',\'' + l.id + '\')">×</button>';
+      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();dupConsulLead(\'' + conId + '\',\'' + l.id + '\')" title="Duplicar">Duplicar</button>';
+      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="event.stopPropagation();removeConsulLead(\'' + conId + '\',\'' + l.id + '\')">×</button>';
       h += '</div></div>';
     });
     h += '</div></div>';
@@ -1284,13 +1284,13 @@ function renderLeadCRM() {
     h += '</div>';
     h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropMainLead(event,\'' + stage.key + '\')">';
     leads.forEach(function(l) {
-      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')">';
+      h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')" onclick="editMainLead(\'' + l.id + '\')" style="cursor:pointer">';
       h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
+      if (l.valor) h += '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px">R$ ' + formatNum(l.valor) + '</div>';
       if (l.origem) h += '<div class="lead-tags" style="margin-top:4px"><span class="tag tag-blue" style="font-size:9px">' + escHtml(l.origem) + '</span></div>';
       h += '<div style="margin-top:8px;display:flex;gap:4px">';
-      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="editMainLead(\'' + l.id + '\')">Editar</button>';
-      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="dupMainLead(\'' + l.id + '\')" title="Duplicar">⧉</button>';
-      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="removeMainLead(\'' + l.id + '\')">×</button>';
+      h += '<button class="btn btn-outline btn-sm" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();dupMainLead(\'' + l.id + '\')" title="Duplicar">Duplicar</button>';
+      h += '<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--red);color:#fff" onclick="event.stopPropagation();removeMainLead(\'' + l.id + '\')">×</button>';
       h += '</div></div>';
     });
     h += '</div></div>';
