@@ -871,6 +871,45 @@ function removeCrmStage(idx) {
   saveState(); renderContent();
 }
 
+var _dragColIdx = -1;
+
+function dragColStart(e, idx) {
+  _dragColIdx = idx;
+  e.dataTransfer.setData('col-idx', idx);
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.style.opacity = '0.4';
+}
+
+function dragColEnd(e) {
+  e.currentTarget.style.opacity = '1';
+  _dragColIdx = -1;
+}
+
+function dragColOver(e, idx) {
+  if (_dragColIdx < 0) return;
+  e.preventDefault();
+  e.currentTarget.style.borderLeft = idx < _dragColIdx ? '3px solid var(--blue)' : 'none';
+  e.currentTarget.style.borderRight = idx > _dragColIdx ? '3px solid var(--blue)' : 'none';
+}
+
+function dragColLeave(e) {
+  e.currentTarget.style.borderLeft = 'none';
+  e.currentTarget.style.borderRight = 'none';
+}
+
+function dropCol(e, targetIdx) {
+  e.preventDefault();
+  e.currentTarget.style.borderLeft = 'none';
+  e.currentTarget.style.borderRight = 'none';
+  var fromIdx = _dragColIdx;
+  if (fromIdx < 0 || fromIdx === targetIdx) return;
+  var stages = state.crmStages;
+  var moved = stages.splice(fromIdx, 1)[0];
+  stages.splice(targetIdx, 0, moved);
+  _dragColIdx = -1;
+  saveState(); renderContent();
+}
+
 function addCrmStage() {
   var nome = prompt('Nome da nova coluna:');
   if (!nome || !nome.trim()) return;
@@ -910,8 +949,8 @@ function renderConsultorCRM(conId, data) {
       if (data.crm[lid].stage === stage.key) leads.push(data.crm[lid]);
     });
     var colValor = 0; leads.forEach(function(l){ colValor += parseFloat(l.valor)||0; });
-    h += '<div class="crm-col">';
-    h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
+    h += '<div class="crm-col" ondragover="dragColOver(event,' + si + ')" ondragleave="dragColLeave(event)" ondrop="if(_dragColIdx>=0){dropCol(event,' + si + ')}else{dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
+    h += '<div class="crm-col-header" draggable="true" ondragstart="dragColStart(event,' + si + ')" ondragend="dragColEnd(event)" style="flex-direction:column;align-items:stretch;cursor:grab">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center">';
     h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
     h += '<div style="display:flex;align-items:center;gap:4px">';
@@ -920,7 +959,7 @@ function renderConsultorCRM(conId, data) {
     h += '</div></div>';
     if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
     h += '</div>';
-    h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')">';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="if(_dragColIdx<0){event.preventDefault();this.classList.add(\'drag-over\')}" ondragleave="this.classList.remove(\'drag-over\')" ondrop="if(_dragColIdx<0){dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
     leads.forEach(function(l) {
       h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')" onclick="editConsulLead(\'' + conId + '\',\'' + l.id + '\')" style="cursor:pointer">';
       h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
@@ -1286,8 +1325,8 @@ function renderLeadCRM() {
       if (state.leads[lid].stage === stage.key) leads.push(state.leads[lid]);
     });
     var colValor = 0; leads.forEach(function(l){ colValor += parseFloat(l.valor)||0; });
-    h += '<div class="crm-col">';
-    h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
+    h += '<div class="crm-col" ondragover="dragColOver(event,' + si + ')" ondragleave="dragColLeave(event)" ondrop="if(_dragColIdx>=0){dropCol(event,' + si + ')}else{dropMainLead(event,\'' + stage.key + '\')}">';
+    h += '<div class="crm-col-header" draggable="true" ondragstart="dragColStart(event,' + si + ')" ondragend="dragColEnd(event)" style="flex-direction:column;align-items:stretch;cursor:grab">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center">';
     h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
     h += '<div style="display:flex;align-items:center;gap:4px">';
@@ -1296,7 +1335,7 @@ function renderLeadCRM() {
     h += '</div></div>';
     if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
     h += '</div>';
-    h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropMainLead(event,\'' + stage.key + '\')">';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="if(_dragColIdx<0){event.preventDefault();this.classList.add(\'drag-over\')}" ondragleave="this.classList.remove(\'drag-over\')" ondrop="if(_dragColIdx<0){dropMainLead(event,\'' + stage.key + '\')}">';
     leads.forEach(function(l) {
       h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')" onclick="editMainLead(\'' + l.id + '\')" style="cursor:pointer">';
       h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
