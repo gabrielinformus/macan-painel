@@ -602,6 +602,17 @@ function ensureState(s) {
   if (!s.calEventos) s.calEventos = [];
   if (!s.fuColunas) s.fuColunas = ['1°','2°','3°','4°','5°','6°','7°','8°'];
   if (!s.crmStages) s.crmStages = CRM_STAGES.map(function(st){ return { key: st.key, label: st.label, color: st.color }; });
+  if (!s.consulCrmStages) s.consulCrmStages = [
+    { key: 'mes-passado', label: 'Mês Passado', color: '#6B7280' },
+    { key: 'reuniao-feita', label: 'Reunião Feita', color: '#3B82F6' },
+    { key: 'desqualificado', label: 'Desqualificado', color: '#EF4444' },
+    { key: 'proposta', label: 'Proposta Enviada', color: '#8B5CF6' },
+    { key: 'followup', label: 'Follow-Up', color: '#F59E0B' },
+    { key: 'negociacao', label: 'Negociação', color: '#143068' },
+    { key: 'venda-fechada', label: 'Venda Fechada', color: '#22C55E' },
+    { key: 'perdido', label: 'Perdido', color: '#DC2626' },
+    { key: 'mes-que-vem', label: 'Mês que Vem', color: '#06B6D4' }
+  ];
   // Migração: reuniões de consultores → state.reunioes (fonte única)
   CONSULTORES.forEach(function(c) {
     var conReuns = s.consultores[c.id].reunioes || [];
@@ -1001,11 +1012,51 @@ function addCrmStage() {
   saveState(); renderContent();
 }
 
+function getConsulCrmStages() { return state.consulCrmStages || getCrmStages(); }
+
+function renameConsulCrmStage(idx) {
+  var stages = getConsulCrmStages();
+  var novo = prompt('Renomear coluna "' + stages[idx].label + '":', stages[idx].label);
+  if (novo !== null && novo.trim()) {
+    state.consulCrmStages[idx].label = novo.trim();
+    saveState(); renderContent();
+  }
+}
+
+function removeConsulCrmStage(idx) {
+  var stages = getConsulCrmStages();
+  if (!confirm('Apagar a coluna "' + stages[idx].label + '"?')) return;
+  state.consulCrmStages.splice(idx, 1);
+  saveState(); renderContent();
+}
+
+function addConsulCrmStage() {
+  var nome = prompt('Nome da nova coluna:');
+  if (!nome || !nome.trim()) return;
+  var cores = ['#6B7280','#3B82F6','#EF4444','#8B5CF6','#F59E0B','#143068','#22C55E','#DC2626','#06B6D4'];
+  var key = nome.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  state.consulCrmStages.push({ key: key, label: nome.trim(), color: cores[state.consulCrmStages.length % cores.length] });
+  saveState(); renderContent();
+}
+
+var _dragConsulColIdx = -1;
+function dragConsulColStart(e, idx) { _dragConsulColIdx = idx; e.dataTransfer.setData('consul-col-idx', idx); e.dataTransfer.effectAllowed = 'move'; e.currentTarget.style.opacity = '0.4'; }
+function dragConsulColEnd(e) { e.currentTarget.style.opacity = '1'; _dragConsulColIdx = -1; }
+function dragConsulColOver(e, idx) { if (_dragConsulColIdx < 0) return; e.preventDefault(); e.currentTarget.style.borderLeft = idx < _dragConsulColIdx ? '3px solid var(--blue)' : 'none'; e.currentTarget.style.borderRight = idx > _dragConsulColIdx ? '3px solid var(--blue)' : 'none'; }
+function dragConsulColLeave(e) { e.currentTarget.style.borderLeft = 'none'; e.currentTarget.style.borderRight = 'none'; }
+function dropConsulCol(e, targetIdx) {
+  e.preventDefault(); e.currentTarget.style.borderLeft = 'none'; e.currentTarget.style.borderRight = 'none';
+  var fromIdx = _dragConsulColIdx; if (fromIdx < 0 || fromIdx === targetIdx) return;
+  var moved = state.consulCrmStages.splice(fromIdx, 1)[0];
+  state.consulCrmStages.splice(targetIdx, 0, moved);
+  _dragConsulColIdx = -1; saveState(); renderContent();
+}
+
 function renderConsultorCRM(conId, data) {
   var h = '<div style="margin-bottom:16px">';
   h += '<h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Pipeline — ' + escHtml(CONSULTORES.find(function(c){return c.id===conId;}).nome) + '</h3>';
   h += '<div style="display:flex;gap:8px">';
-  h += '<button class="btn btn-outline btn-sm" onclick="addCrmStage()">+ Coluna</button>';
+  h += '<button class="btn btn-outline btn-sm" onclick="addConsulCrmStage()">+ Coluna</button>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddLeadConsultor(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
   h += '</div></div>';
 
@@ -1017,13 +1068,13 @@ function renderConsultorCRM(conId, data) {
     if (l.stage === 'venda-fechada') { totalFechado++; totalFechadoValor += parseFloat(l.valor) || 0; }
   });
   h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
-  h += '<div class="stat-card" style="padding:14px"><div class="label">Total Negociações</div><div class="value" style="font-size:22px">' + totalLeads + '</div></div>';
-  h += '<div class="stat-card" style="padding:14px"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--navy-600)">R$ ' + formatNum(totalValor) + '</div></div>';
-  h += '<div class="stat-card" style="padding:14px"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
-  h += '<div class="stat-card" style="padding:14px"><div class="label">Valor Fechado</div><div class="value" style="font-size:22px;color:var(--green)">R$ ' + formatNum(totalFechadoValor) + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--navy-600)"><div class="label">Total Negociações</div><div class="value" style="font-size:22px;color:var(--navy-600)">' + totalLeads + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--blue)"><div class="label">Valor no Pipeline</div><div class="value" style="font-size:22px;color:var(--blue)">R$ ' + formatNum(totalValor) + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Vendas Fechadas</div><div class="value" style="font-size:22px;color:var(--green)">' + totalFechado + '</div></div>';
+  h += '<div class="stat-card" style="padding:14px;border-top:3px solid var(--green)"><div class="label">Valor Fechado</div><div class="value" style="font-size:22px;color:var(--green)">R$ ' + formatNum(totalFechadoValor) + '</div></div>';
   h += '</div>';
 
-  var stages = getCrmStages();
+  var stages = getConsulCrmStages();
   h += '<div class="crm-board" id="crm-board-consul">';
   stages.forEach(function(stage, si) {
     var leads = [];
@@ -1031,17 +1082,17 @@ function renderConsultorCRM(conId, data) {
       if (data.crm[lid].stage === stage.key) leads.push(data.crm[lid]);
     });
     var colValor = 0; leads.forEach(function(l){ colValor += parseFloat(l.valor)||0; });
-    h += '<div class="crm-col" ondragover="dragColOver(event,' + si + ')" ondragleave="dragColLeave(event)" ondrop="if(_dragColIdx>=0){dropCol(event,' + si + ')}else{dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
-    h += '<div class="crm-col-header" draggable="true" ondragstart="dragColStart(event,' + si + ')" ondragend="dragColEnd(event)" style="flex-direction:column;align-items:stretch;cursor:grab">';
+    h += '<div class="crm-col" ondragover="dragConsulColOver(event,' + si + ')" ondragleave="dragConsulColLeave(event)" ondrop="if(_dragConsulColIdx>=0){dropConsulCol(event,' + si + ')}else{dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
+    h += '<div class="crm-col-header" draggable="true" ondragstart="dragConsulColStart(event,' + si + ')" ondragend="dragConsulColEnd(event)" style="flex-direction:column;align-items:stretch;cursor:grab">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center">';
-    h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
+    h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameConsulCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
     h += '<div style="display:flex;align-items:center;gap:4px">';
     h += '<span class="crm-col-count">' + leads.length + '</span>';
-    h += '<button onclick="removeCrmStage(' + si + ')" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:12px;padding:0 2px" title="Apagar coluna">×</button>';
+    h += '<button onclick="removeConsulCrmStage(' + si + ')" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:12px;padding:0 2px" title="Apagar coluna">×</button>';
     h += '</div></div>';
     if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
     h += '</div>';
-    h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="if(_dragColIdx<0){event.preventDefault();this.classList.add(\'drag-over\')}" ondragleave="this.classList.remove(\'drag-over\')" ondrop="if(_dragColIdx<0){dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
+    h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="if(_dragConsulColIdx<0){event.preventDefault();this.classList.add(\'drag-over\')}" ondragleave="this.classList.remove(\'drag-over\')" ondrop="if(_dragConsulColIdx<0){dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')}">';
     leads.forEach(function(l) {
       h += '<div class="crm-card" draggable="true" ondragstart="event.dataTransfer.setData(\'text\',\'' + l.id + '\');this.classList.add(\'dragging\')" ondragend="this.classList.remove(\'dragging\')" onclick="editConsulLead(\'' + conId + '\',\'' + l.id + '\')" style="cursor:pointer">';
       h += '<div class="lead-name">' + escHtml(l.nome||'') + '</div>';
@@ -1096,7 +1147,7 @@ function openAddLeadConsultor(conId) {
 function editConsulLead(conId, leadId) {
   var l = state.consultores[conId].crm[leadId];
   if (!l) return;
-  var stages = getCrmStages();
+  var stages = getConsulCrmStages();
   showModal('Editar Negociação', [
     { id: 'cl-nome', label: 'Nome do Cliente', type: 'text', value: l.nome },
     { id: 'cl-tel', label: 'Telefone', type: 'text', value: l.telefone },
