@@ -1090,6 +1090,7 @@ var _cropY = 0;
 var _cropDragging = false;
 var _cropLastX = 0;
 var _cropLastY = 0;
+var _cropCallback = null;
 
 function setConsulFoto(conId) {
   _cropConId = conId;
@@ -1180,9 +1181,16 @@ function cropSave() {
   outCanvas.width = 200; outCanvas.height = 200;
   var ctx = outCanvas.getContext('2d');
   ctx.drawImage(canvas, 0, 0, 260, 260, 0, 0, 200, 200);
-  if (!state.consulFotos) state.consulFotos = {};
-  state.consulFotos[_cropConId] = outCanvas.toDataURL('image/jpeg', 0.85);
-  saveState(); closeModal(); renderContent();
+  var base64 = outCanvas.toDataURL('image/jpeg', 0.85);
+  if (_cropCallback) {
+    _cropCallback(base64);
+    _cropCallback = null;
+  } else {
+    if (!state.consulFotos) state.consulFotos = {};
+    state.consulFotos[_cropConId] = base64;
+    saveState(); renderContent();
+  }
+  closeModal();
 }
 
 function renderTicker() {
@@ -2948,11 +2956,17 @@ function uploadLogo() {
     if (!inp.files[0]) return;
     var reader = new FileReader();
     reader.onload = function(e) {
-      openCropModal(e.target.result, function(base64) {
-        state.logoBase64 = base64;
-        saveState();
-        applyLogo();
-      });
+      _cropImg = new Image();
+      _cropImg.onload = function() {
+        _cropZoom = 1; _cropX = 0; _cropY = 0;
+        _cropCallback = function(base64) {
+          state.logoBase64 = base64;
+          saveState();
+          applyLogo();
+        };
+        openCropModal();
+      };
+      _cropImg.src = e.target.result;
     };
     reader.readAsDataURL(inp.files[0]);
   };
