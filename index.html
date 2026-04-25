@@ -777,18 +777,27 @@ function renderDashboard() {
   var el = document.getElementById('app-content');
   var totalLeads = 0, totalReunioes = 0, totalFechados = 0, fatTotal = 0;
 
+  // Leads gerais
   Object.keys(state.leads).forEach(function(id) {
     totalLeads++;
-    if (state.leads[id].stage === 'reuniao') totalReunioes++;
-    if (state.leads[id].stage === 'fechado') totalFechados++;
+    if (state.leads[id].stage === 'venda-fechada') totalFechados++;
   });
 
+  // Leads dos consultores
   var mesKey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
   CONSULTORES.forEach(function(con) {
     var d = state.consultores[con.id];
+    Object.keys(d.crm).forEach(function(lid) {
+      totalLeads++;
+      if (d.crm[lid].stage === 'venda-fechada') totalFechados++;
+    });
     var fat = d.faturamento[mesKey] || [];
     fat.forEach(function(f) { fatTotal += (f.valor || 0); });
   });
+  // Faturamento manual do mês
+  if (state.faturamento && state.faturamento.mensal && state.faturamento.mensal[mesKey]) {
+    fatTotal += state.faturamento.mensal[mesKey];
+  }
 
   var demPend = state.demandas.filter(function(d){return d.stage==='pendente';}).length;
   var reun = state.reunioes.filter(function(r) {
