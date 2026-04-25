@@ -489,6 +489,45 @@ select.form-input { cursor: pointer; }
 .dash-preset:hover { background: var(--navy-50); color: var(--navy-600); }
 .dash-preset.active { background: var(--navy-600); color: #fff; font-weight: 600; }
 
+/* LOGIN SCREEN */
+.login-screen {
+  position: fixed; inset: 0; z-index: 999;
+  background: linear-gradient(135deg, var(--navy-900) 0%, #081630 50%, var(--navy-800) 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: rgba(255,255,255,0.04); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 24px;
+  padding: 48px 40px; width: 400px; max-width: 90vw; text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+}
+.login-logo {
+  width: 64px; height: 64px; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px; backdrop-filter: blur(8px);
+}
+.login-logo svg { width: 36px; height: 36px; stroke: var(--navy-100); }
+.login-title { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 4px; }
+.login-sub { font-size: 12px; color: var(--navy-400); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 32px; }
+.login-input {
+  width: 100%; padding: 14px 18px; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; font-size: 14px; font-family: inherit; background: rgba(255,255,255,0.06);
+  color: #fff; margin-bottom: 14px; transition: var(--transition);
+}
+.login-input::placeholder { color: rgba(255,255,255,0.3); }
+.login-input:focus { outline: none; border-color: var(--navy-300); background: rgba(255,255,255,0.1); box-shadow: 0 0 0 4px rgba(74,123,200,0.15); }
+.login-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px;
+  font-weight: 700; cursor: pointer; margin-top: 8px; transition: var(--transition);
+  background: linear-gradient(135deg, var(--navy-400), var(--navy-300)); color: #fff;
+  box-shadow: 0 4px 16px rgba(74,123,200,0.3); letter-spacing: 0.02em;
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(74,123,200,0.4); }
+.login-error {
+  color: #EF4444; font-size: 13px; font-weight: 600; margin-top: 12px;
+  padding: 8px 14px; background: rgba(239,68,68,0.1); border-radius: 8px; display: none;
+}
+
 /* TICKER BAR */
 .ticker-bar {
   position: fixed; bottom: 0; left: 260px; right: 0; height: 36px; z-index: 90;
@@ -593,6 +632,21 @@ select.form-input { cursor: pointer; }
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="login-title">MACAN</div>
+    <div class="login-sub">Estratégias Financeiras</div>
+    <input class="login-input" id="login-user" type="text" placeholder="Usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <input class="login-input" id="login-pass" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Usuário ou senha incorretos</div>
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-brand">
@@ -613,6 +667,8 @@ select.form-input { cursor: pointer; }
     <h2 id="topbar-title">Dashboard</h2>
     <div class="topbar-right">
       <span style="font-size:12px;color:var(--gray-400);font-weight:500" id="topbar-date"></span>
+      <span style="font-size:12px;font-weight:600;color:var(--navy-600)" id="topbar-user"></span>
+      <button onclick="doLogout()" style="background:none;border:1px solid var(--gray-200);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--gray-500);cursor:pointer;transition:var(--transition)" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-200)';this.style.color='var(--gray-500)'">Sair</button>
     </div>
   </div>
   <div class="content" id="app-content" style="padding-bottom:52px"></div>
@@ -2864,9 +2920,70 @@ function closeModal() {
   document.getElementById('modal-root').innerHTML = '';
 }
 
+// ===== AUTH =====
+var AUTH_USERS = [
+  { user: 'gabriel', pass: 'macan2026', nome: 'Gabriel', role: 'admin' }
+];
+var _currentUser = null;
+
+function checkAuth() {
+  var saved = localStorage.getItem('macan_auth');
+  if (saved) {
+    try {
+      var u = JSON.parse(saved);
+      var found = AUTH_USERS.find(function(a){ return a.user === u.user && a.pass === u.pass; });
+      if (found) { _currentUser = found; return true; }
+    } catch(e) {}
+  }
+  return false;
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.querySelector('.sidebar').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+  document.getElementById('ticker-bar').style.display = 'none';
+  setTimeout(function(){ document.getElementById('login-user').focus(); }, 100);
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.querySelector('.sidebar').style.display = 'flex';
+  document.querySelector('.main').style.display = 'block';
+  var userEl = document.getElementById('topbar-user');
+  if (userEl && _currentUser) userEl.textContent = _currentUser.nome;
+  renderSidebar();
+  renderContent();
+}
+
+function doLogin() {
+  var user = document.getElementById('login-user').value.trim().toLowerCase();
+  var pass = document.getElementById('login-pass').value;
+  var found = AUTH_USERS.find(function(a){ return a.user === user && a.pass === pass; });
+  if (found) {
+    _currentUser = found;
+    localStorage.setItem('macan_auth', JSON.stringify({ user: found.user, pass: found.pass }));
+    document.getElementById('login-error').style.display = 'none';
+    showApp();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function doLogout() {
+  _currentUser = null;
+  localStorage.removeItem('macan_auth');
+  showLogin();
+}
+
 // ===== INIT =====
-renderSidebar();
-renderContent();
+if (checkAuth()) {
+  showApp();
+} else {
+  showLogin();
+}
 </script>
 </body>
 </html>
