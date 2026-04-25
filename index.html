@@ -68,6 +68,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--gra
   display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);
 }
 .sidebar-brand .logo svg { width: 22px; height: 22px; stroke: var(--navy-100); }
+.sidebar-brand .logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+.sidebar-brand .logo { cursor: pointer; overflow: hidden; position: relative; }
 .sidebar-brand h1 { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 0.08em; }
 .sidebar-brand small { font-size: 9px; color: var(--navy-400); display: block; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; font-weight: 500; }
 
@@ -507,6 +509,7 @@ select.form-input { cursor: pointer; }
   margin: 0 auto 20px; backdrop-filter: blur(8px);
 }
 .login-logo svg { width: 36px; height: 36px; stroke: var(--navy-100); }
+.login-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
 .login-title { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 4px; }
 .login-sub { font-size: 12px; color: var(--navy-400); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 32px; }
 .login-input {
@@ -635,8 +638,8 @@ select.form-input { cursor: pointer; }
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-box">
-    <div class="login-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    <div class="login-logo" id="login-logo-wrap">
+      <svg id="login-logo-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
     <div class="login-title">MACAN</div>
     <div class="login-sub">Estratégias Financeiras</div>
@@ -650,8 +653,8 @@ select.form-input { cursor: pointer; }
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-brand">
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    <div class="logo" id="sidebar-logo" onclick="uploadLogo()" title="Clique para trocar o logo">
+      <svg id="sidebar-logo-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
     <div>
       <h1>MACAN</h1>
@@ -2938,6 +2941,43 @@ var AUTH_USERS = [
 ];
 var _currentUser = null;
 
+function uploadLogo() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = function() {
+    if (!inp.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      openCropModal(e.target.result, function(base64) {
+        state.logoBase64 = base64;
+        saveState();
+        applyLogo();
+      });
+    };
+    reader.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+
+function applyLogo() {
+  var sidebarLogo = document.getElementById('sidebar-logo');
+  var loginLogo = document.getElementById('login-logo-wrap');
+  if (state && state.logoBase64) {
+    var ssvg = document.getElementById('sidebar-logo-svg');
+    if (ssvg) ssvg.style.display = 'none';
+    var existImg = sidebarLogo.querySelector('img');
+    if (!existImg) { existImg = document.createElement('img'); sidebarLogo.appendChild(existImg); }
+    existImg.src = state.logoBase64;
+    var lsvg = document.getElementById('login-logo-svg');
+    if (lsvg) lsvg.style.display = 'none';
+    if (loginLogo) {
+      var lexist = loginLogo.querySelector('img');
+      if (!lexist) { lexist = document.createElement('img'); loginLogo.appendChild(lexist); }
+      lexist.src = state.logoBase64;
+    }
+  }
+}
+
 function checkAuth() {
   var saved = localStorage.getItem('macan_auth');
   if (saved) {
@@ -2955,6 +2995,7 @@ function showLogin() {
   document.querySelector('.sidebar').style.display = 'none';
   document.querySelector('.main').style.display = 'none';
   document.getElementById('ticker-bar').style.display = 'none';
+  applyLogo();
   setTimeout(function(){ document.getElementById('login-user').focus(); }, 100);
 }
 
@@ -2964,6 +3005,7 @@ function showApp() {
   document.querySelector('.main').style.display = 'block';
   var userEl = document.getElementById('topbar-user');
   if (userEl && _currentUser) userEl.textContent = _currentUser.nome;
+  applyLogo();
   renderSidebar();
   renderContent();
 }
