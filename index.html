@@ -557,6 +557,7 @@ function ensureState(s) {
   if (!s.faturamento.meses) s.faturamento.meses = {};
   if (!s.calEventos) s.calEventos = [];
   if (!s.fuColunas) s.fuColunas = ['1°','2°','3°','4°','5°','6°','7°','8°'];
+  if (!s.crmStages) s.crmStages = CRM_STAGES.map(function(st){ return { key: st.key, label: st.label, color: st.color }; });
   // Migração: reuniões de consultores → state.reunioes (fonte única)
   CONSULTORES.forEach(function(c) {
     var conReuns = s.consultores[c.id].reunioes || [];
@@ -852,11 +853,40 @@ function renderConsultor() {
 }
 
 // Consultor CRM
+function getCrmStages() { return state.crmStages || CRM_STAGES; }
+
+function renameCrmStage(idx) {
+  var stages = getCrmStages();
+  var novo = prompt('Renomear coluna "' + stages[idx].label + '":', stages[idx].label);
+  if (novo !== null && novo.trim()) {
+    state.crmStages[idx].label = novo.trim();
+    saveState(); renderContent();
+  }
+}
+
+function removeCrmStage(idx) {
+  var stages = getCrmStages();
+  if (!confirm('Apagar a coluna "' + stages[idx].label + '"? Os leads dessa coluna ficarão sem estágio.')) return;
+  state.crmStages.splice(idx, 1);
+  saveState(); renderContent();
+}
+
+function addCrmStage() {
+  var nome = prompt('Nome da nova coluna:');
+  if (!nome || !nome.trim()) return;
+  var cores = ['#6B7280','#3B82F6','#EF4444','#8B5CF6','#F59E0B','#143068','#22C55E','#DC2626','#06B6D4'];
+  var key = nome.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  state.crmStages.push({ key: key, label: nome.trim(), color: cores[state.crmStages.length % cores.length] });
+  saveState(); renderContent();
+}
+
 function renderConsultorCRM(conId, data) {
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
   h += '<h3 style="font-size:16px;font-weight:700">Pipeline — ' + escHtml(CONSULTORES.find(function(c){return c.id===conId;}).nome) + '</h3>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<button class="btn btn-outline btn-sm" onclick="addCrmStage()">+ Coluna</button>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddLeadConsultor(\'' + conId + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
-  h += '</div>';
+  h += '</div></div>';
 
   // Summary cards
   var totalLeads = 0, totalValor = 0, totalFechado = 0, totalFechadoValor = 0;
@@ -872,8 +902,9 @@ function renderConsultorCRM(conId, data) {
   h += '<div class="stat-card" style="padding:14px"><div class="label">Valor Fechado</div><div class="value" style="font-size:22px;color:var(--green)">R$ ' + formatNum(totalFechadoValor) + '</div></div>';
   h += '</div>';
 
+  var stages = getCrmStages();
   h += '<div class="crm-board" id="crm-board-consul">';
-  CRM_STAGES.forEach(function(stage) {
+  stages.forEach(function(stage, si) {
     var leads = [];
     Object.keys(data.crm).forEach(function(lid) {
       if (data.crm[lid].stage === stage.key) leads.push(data.crm[lid]);
@@ -882,9 +913,11 @@ function renderConsultorCRM(conId, data) {
     h += '<div class="crm-col">';
     h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center">';
-    h += '<span class="crm-col-title" style="color:' + stage.color + '">' + stage.label + '</span>';
+    h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
+    h += '<div style="display:flex;align-items:center;gap:4px">';
     h += '<span class="crm-col-count">' + leads.length + '</span>';
-    h += '</div>';
+    h += '<button onclick="removeCrmStage(' + si + ')" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:12px;padding:0 2px" title="Apagar coluna">×</button>';
+    h += '</div></div>';
     if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
     h += '</div>';
     h += '<div class="crm-cards" data-stage="' + stage.key + '" data-consul="' + conId + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropConsulLead(event,\'' + conId + '\',\'' + stage.key + '\')">';
@@ -1222,11 +1255,14 @@ function renderLeadCRM() {
   var el = document.getElementById('app-content');
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
   h += '<h3 style="font-size:16px;font-weight:700">Pipeline de Leads</h3>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<button class="btn btn-outline btn-sm" onclick="addCrmStage()">+ Coluna</button>';
   h += '<button class="btn btn-primary btn-sm" onclick="openAddLead()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova Negociação</button>';
-  h += '</div>';
+  h += '</div></div>';
 
+  var stages = getCrmStages();
   h += '<div class="crm-board" id="crm-board-main">';
-  CRM_STAGES.forEach(function(stage) {
+  stages.forEach(function(stage, si) {
     var leads = [];
     Object.keys(state.leads).forEach(function(lid) {
       if (state.leads[lid].stage === stage.key) leads.push(state.leads[lid]);
@@ -1235,9 +1271,11 @@ function renderLeadCRM() {
     h += '<div class="crm-col">';
     h += '<div class="crm-col-header" style="flex-direction:column;align-items:stretch">';
     h += '<div style="display:flex;justify-content:space-between;align-items:center">';
-    h += '<span class="crm-col-title" style="color:' + stage.color + '">' + stage.label + '</span>';
+    h += '<span class="crm-col-title" style="color:' + stage.color + ';cursor:pointer" onclick="renameCrmStage(' + si + ')" title="Clique para renomear">' + stage.label + '</span>';
+    h += '<div style="display:flex;align-items:center;gap:4px">';
     h += '<span class="crm-col-count">' + leads.length + '</span>';
-    h += '</div>';
+    h += '<button onclick="removeCrmStage(' + si + ')" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:12px;padding:0 2px" title="Apagar coluna">×</button>';
+    h += '</div></div>';
     if (colValor > 0) h += '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">R$ ' + formatNum(colValor) + '</div>';
     h += '</div>';
     h += '<div class="crm-cards" data-stage="' + stage.key + '" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="dropMainLead(event,\'' + stage.key + '\')">';
