@@ -869,6 +869,14 @@ function genId() { return Date.now().toString(36) + Math.random().toString(36).s
 function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function linkify(s) { return escHtml(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);text-decoration:underline">$1</a>'); }
 function formatNum(n) { return Number(n).toLocaleString('pt-BR'); }
+function maskMoney(el) {
+  var v = el.value.replace(/\D/g, '');
+  if (!v) { el.value = ''; return; }
+  v = (parseInt(v, 10)).toString();
+  v = v.replace(/(\d)(?=(\d{3})+$)/g, '$1.');
+  el.value = v;
+}
+function unmaskMoney(s) { return parseFloat(String(s).replace(/\./g, '').replace(',', '.')) || 0; }
 
 // ===== DATE =====
 var today = new Date();
@@ -1575,7 +1583,7 @@ function openAddLeadConsultor(conId) {
     { id: 'cl-tel', label: 'Telefone', type: 'text' },
     { id: 'cl-email', label: 'E-mail', type: 'text' },
     { id: 'cl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS },
-    { id: 'cl-valor', label: 'Valor (R$)', type: 'number' },
+    { id: 'cl-valor', label: 'Valor (R$)', type: 'money' },
     { id: 'cl-interesse', label: 'Detalhes / Observação', type: 'text' },
     { id: 'cl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'] }
   ], function() {
@@ -1585,7 +1593,7 @@ function openAddLeadConsultor(conId) {
       telefone: document.getElementById('cl-tel').value.trim(),
       email: document.getElementById('cl-email').value.trim(),
       tipo: document.getElementById('cl-tipo').value,
-      valor: parseFloat(document.getElementById('cl-valor').value) || 0,
+      valor: unmaskMoney(document.getElementById('cl-valor').value),
       interesse: document.getElementById('cl-interesse').value.trim(),
       origem: document.getElementById('cl-origem').value,
       stage: 'reuniao-feita',
@@ -1606,7 +1614,7 @@ function editConsulLead(conId, leadId) {
     { id: 'cl-tel', label: 'Telefone', type: 'text', value: l.telefone },
     { id: 'cl-email', label: 'E-mail', type: 'text', value: l.email },
     { id: 'cl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS, value: l.tipo },
-    { id: 'cl-valor', label: 'Valor (R$)', type: 'number', value: l.valor || '' },
+    { id: 'cl-valor', label: 'Valor (R$)', type: 'money', value: l.valor || '' },
     { id: 'cl-interesse', label: 'Detalhes / Observação', type: 'text', value: l.interesse },
     { id: 'cl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'], value: l.origem },
     { id: 'cl-stage', label: 'Etapa', type: 'select', options: stages.map(function(s){return s.label;}), value: (stages.find(function(s){return s.key===l.stage;})||{}).label },
@@ -1616,7 +1624,7 @@ function editConsulLead(conId, leadId) {
     l.telefone = document.getElementById('cl-tel').value.trim();
     l.email = document.getElementById('cl-email').value.trim();
     l.tipo = document.getElementById('cl-tipo').value;
-    l.valor = parseFloat(document.getElementById('cl-valor').value) || 0;
+    l.valor = unmaskMoney(document.getElementById('cl-valor').value);
     l.interesse = document.getElementById('cl-interesse').value.trim();
     l.origem = document.getElementById('cl-origem').value;
     l.motivoPerda = document.getElementById('cl-motivo').value.trim();
@@ -1827,7 +1835,7 @@ function renderConsultorFaturamento(conId, data, fatMonth) {
   h += '<tr style="background:rgba(20,48,104,0.03)">';
   h += '<td><input id="cf-cliente" class="form-input" style="font-size:11px;padding:4px 6px" placeholder="Cliente"></td>';
   h += '<td><select id="cf-produto" class="form-input" style="font-size:11px;padding:4px 6px" onchange="if(this.value===\'__outro\'){this.style.display=\'none\';document.getElementById(\'cf-produto-custom\').style.display=\'block\';document.getElementById(\'cf-produto-custom\').focus();}"><option value="">Selecione...</option><option value="Imóvel">Imóvel</option><option value="Veículos">Veículos</option><option value="Alavancagem Patrimonial">Alavancagem Patrimonial</option><option value="__outro">Outro (digitar)</option></select><input id="cf-produto-custom" class="form-input" style="font-size:11px;padding:4px 6px;display:none" placeholder="Produto personalizado"></td>';
-  h += '<td><input id="cf-valor" class="form-input" type="number" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Valor"></td>';
+  h += '<td><input id="cf-valor" class="form-input" type="text" inputmode="numeric" oninput="maskMoney(this)" style="font-size:11px;padding:4px 6px;width:90px" placeholder="Valor"></td>';
   h += '<td><input id="cf-data" class="form-input" style="font-size:11px;padding:4px 6px;width:80px" placeholder="dd/mm"></td>';
   h += '<td><button class="btn btn-primary" style="padding:4px 8px;font-size:10px" onclick="submitConsulFat(\'' + conId + '\',\'' + fatMonth + '\')">+</button></td>';
   h += '</tr>';
@@ -1846,7 +1854,7 @@ function submitConsulFat(conId, month) {
   state.consultores[conId].faturamento[month].push({
     cliente: cliente,
     produto: produto,
-    valor: parseFloat(document.getElementById('cf-valor').value) || 0,
+    valor: unmaskMoney(document.getElementById('cf-valor').value),
     data: document.getElementById('cf-data').value.trim()
   });
   saveState(); renderContent();
@@ -1963,7 +1971,7 @@ function openAddLead() {
     { id: 'nl-tel', label: 'Telefone', type: 'text' },
     { id: 'nl-email', label: 'E-mail', type: 'text' },
     { id: 'nl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS },
-    { id: 'nl-valor', label: 'Valor (R$)', type: 'number' },
+    { id: 'nl-valor', label: 'Valor (R$)', type: 'money' },
     { id: 'nl-interesse', label: 'Detalhes / Observação', type: 'text' },
     { id: 'nl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'] },
     { id: 'nl-consultor', label: 'Consultor', type: 'select', options: consulOptions }
@@ -1973,7 +1981,7 @@ function openAddLead() {
       telefone: document.getElementById('nl-tel').value.trim(),
       email: document.getElementById('nl-email').value.trim(),
       tipo: document.getElementById('nl-tipo').value,
-      valor: parseFloat(document.getElementById('nl-valor').value) || 0,
+      valor: unmaskMoney(document.getElementById('nl-valor').value),
       interesse: document.getElementById('nl-interesse').value.trim(),
       origem: document.getElementById('nl-origem').value,
       stage: 'reuniao-feita', createdAt: new Date().toISOString()
@@ -1997,7 +2005,7 @@ function editMainLead(lid) {
     { id: 'nl-tel', label: 'Telefone', type: 'text', value: l.telefone },
     { id: 'nl-email', label: 'E-mail', type: 'text', value: l.email },
     { id: 'nl-tipo', label: 'Tipo de Negociação', type: 'select', options: CRM_TIPOS, value: l.tipo },
-    { id: 'nl-valor', label: 'Valor (R$)', type: 'number', value: l.valor || '' },
+    { id: 'nl-valor', label: 'Valor (R$)', type: 'money', value: l.valor || '' },
     { id: 'nl-interesse', label: 'Detalhes / Observação', type: 'text', value: l.interesse },
     { id: 'nl-origem', label: 'Origem', type: 'select', options: ['Anúncio','Indicação','Site','WhatsApp','Outro'], value: l.origem },
     { id: 'nl-consultor', label: 'Consultor', type: 'select', options: consulOptions, value: curCon },
@@ -2008,7 +2016,7 @@ function editMainLead(lid) {
     l.telefone = document.getElementById('nl-tel').value.trim();
     l.email = document.getElementById('nl-email').value.trim();
     l.tipo = document.getElementById('nl-tipo').value;
-    l.valor = parseFloat(document.getElementById('nl-valor').value) || 0;
+    l.valor = unmaskMoney(document.getElementById('nl-valor').value);
     l.interesse = document.getElementById('nl-interesse').value.trim();
     l.origem = document.getElementById('nl-origem').value;
     l.motivoPerda = document.getElementById('nl-motivo').value.trim();
@@ -2769,7 +2777,7 @@ function renderFaturamento() {
   h += '<div class="card" style="margin-bottom:20px"><div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
   h += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--gray-600)">Meta Anual:</span>';
   h += '<div style="position:relative"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--gray-400)">R$</span>';
-  h += '<input type="number" class="form-input" style="width:200px;padding-left:34px" value="' + state.faturamento.metaAnual + '" onchange="state.faturamento.metaAnual=parseFloat(this.value)||0;saveState();renderContent()"></div></div>';
+  h += '<input type="text" inputmode="numeric" class="form-input" style="width:200px;padding-left:34px" value="' + formatNum(state.faturamento.metaAnual) + '" oninput="maskMoney(this)" onchange="state.faturamento.metaAnual=unmaskMoney(this.value);saveState();renderContent()"></div></div>';
   h += '</div></div>';
 
   // Progress bar
@@ -2799,7 +2807,7 @@ function renderFaturamento() {
     h += '<div style="display:flex;align-items:center;gap:6px">';
     h += '<span style="font-size:10px;color:var(--gray-400);white-space:nowrap">Faturamento:</span>';
     h += '<div style="position:relative;flex:1"><span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--gray-400)">R$</span>';
-    h += '<input type="number" class="form-input" style="font-size:12px;padding:4px 6px 4px 24px;width:100%" value="' + manual + '" onchange="saveFatMensal(\'' + mk + '\',this.value)">';
+    h += '<input type="text" inputmode="numeric" class="form-input" style="font-size:12px;padding:4px 6px 4px 24px;width:100%" value="' + (manual > 0 ? formatNum(manual) : '') + '" oninput="maskMoney(this)" onchange="saveFatMensal(\'' + mk + '\',this.value)">';
     h += '</div></div>';
     // Mini progress
     if (state.faturamento.metaAnual > 0) {
@@ -2859,7 +2867,7 @@ function renderFaturamento() {
 
 function saveFatMensal(mk, val) {
   if (!state.faturamento.mensal) state.faturamento.mensal = {};
-  state.faturamento.mensal[mk] = parseFloat(val) || 0;
+  state.faturamento.mensal[mk] = unmaskMoney(val);
   saveState(); renderContent();
 }
 
@@ -2892,6 +2900,9 @@ function showModal(title, fields, onSave, saveLabel, onDelete) {
         h += '<option value="' + escHtml(opt) + '"' + (f.value===opt?' selected':'') + '>' + escHtml(opt) + '</option>';
       });
       h += '</select>';
+    } else if (f.type === 'money') {
+      var mv = f.value ? formatNum(f.value) : '';
+      h += '<input id="' + f.id + '" type="text" inputmode="numeric" class="form-input" value="' + escHtml(mv) + '" oninput="maskMoney(this)" placeholder="0">';
     } else {
       h += '<input id="' + f.id + '" type="' + f.type + '" class="form-input" value="' + escHtml(f.value||'') + '">';
     }
