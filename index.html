@@ -370,20 +370,26 @@ select.form-input { cursor: pointer; }
 .followup-card.done { border-left-color: var(--green); opacity: 0.6; }
 
 /* FOLLOW-UP CADÊNCIA TABLE */
-.fu-table-wrap { overflow-x: auto; }
+.fu-table-wrap { overflow-x: auto; margin-top: 8px; }
 .fu-table {
   width: 100%; border-collapse: collapse; background: var(--white);
   border-radius: 10px; overflow: hidden; border: 1px solid var(--gray-200);
 }
 .fu-table th {
   text-align: left; font-size: 11px; font-weight: 600; color: var(--gray-500);
-  text-transform: uppercase; letter-spacing: 0.04em; padding: 10px 12px;
+  text-transform: uppercase; letter-spacing: 0.04em; padding: 12px 16px;
   border-bottom: 1px solid var(--gray-200); background: var(--gray-50);
 }
+.fu-table th.fu-col-check { text-align: center; min-width: 70px; cursor: pointer; }
+.fu-table th.fu-col-check:hover { color: var(--navy-600); }
+.fu-table th.fu-col-nome { min-width: 180px; }
+.fu-table th.fu-col-fone { min-width: 140px; }
+.fu-table th.fu-col-etapa { min-width: 100px; }
 .fu-table td {
-  padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--gray-50);
+  padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-100);
   vertical-align: middle;
 }
+.fu-table td.fu-td-check { text-align: center; }
 .fu-table tr:last-child td { border-bottom: none; }
 .fu-table .fu-nome { font-weight: 600; cursor: pointer; color: var(--gray-900); }
 .fu-table .fu-fone { color: var(--blue); cursor: pointer; font-size: 12px; text-decoration: none; }
@@ -550,6 +556,7 @@ function ensureState(s) {
   if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
   if (!s.faturamento.meses) s.faturamento.meses = {};
   if (!s.calEventos) s.calEventos = [];
+  if (!s.fuColunas) s.fuColunas = ['1°','2°','3°','4°','5°','6°','7°','8°'];
   // Migração: reuniões de consultores → state.reunioes (fonte única)
   CONSULTORES.forEach(function(c) {
     var conReuns = s.consultores[c.id].reunioes || [];
@@ -1008,11 +1015,20 @@ function renderConsultorFollowup(conId, data) {
 
   var leads = data.fuLeads[fuMonth] || [];
 
+  var cols = state.fuColunas || ['1°','2°','3°','4°','5°','6°','7°','8°'];
+  var totalCols = 3 + cols.length + 1;
+
   h += '<div class="fu-table-wrap">';
-  h += '<table class="fu-table"><thead><tr><th>Nome</th><th>Número</th><th>Etapa</th><th>1°</th><th>2°</th><th>3°</th><th>4°</th><th>5°</th><th>6°</th><th>7°</th><th>8°</th><th style="width:40px"></th></tr></thead><tbody>';
+  h += '<table class="fu-table"><thead><tr>';
+  h += '<th class="fu-col-nome">Nome</th><th class="fu-col-fone">Número</th><th class="fu-col-etapa">Etapa</th>';
+  cols.forEach(function(col, ci) {
+    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + '</th>';
+  });
+  h += '<th style="width:70px"><button onclick="addFuColuna()" style="background:none;border:1px dashed var(--gray-300);border-radius:4px;cursor:pointer;color:var(--gray-400);font-size:11px;padding:2px 8px;font-weight:600" title="Adicionar coluna">+</button></th>';
+  h += '</tr></thead><tbody>';
 
   if (leads.length === 0) {
-    h += '<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
+    h += '<tr><td colspan="' + totalCols + '" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
   } else {
     leads.forEach(function(l) {
       var rowCls = l.etapa ? ' fu-row-' + l.etapa : '';
@@ -1023,9 +1039,9 @@ function renderConsultorFollowup(conId, data) {
       else h += '-';
       h += '</td>';
       h += '<td><span class="fu-etapa e-' + (l.etapa||'novo') + '">' + (l.etapa||'novo').replace(/-/g,' ') + '</span></td>';
-      for (var c = 0; c < 8; c++) {
+      for (var c = 0; c < cols.length; c++) {
         var checked = (l.contatos && l.contatos[c]) ? ' checked' : '';
-        h += '<td><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheck(\'' + conId + '\',\'' + l.id + '\',' + c + ',this.checked)"></td>';
+        h += '<td class="fu-td-check"><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheck(\'' + conId + '\',\'' + l.id + '\',' + c + ',this.checked)"></td>';
       }
       h += '<td><button onclick="removeFuLead(\'' + conId + '\',\'' + l.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>';
       h += '</tr>';
@@ -1347,11 +1363,20 @@ function renderLeadFollowup() {
 
   var leads = state.fuLeadsGeral[fuMonth] || [];
 
+  var cols = state.fuColunas || ['1°','2°','3°','4°','5°','6°','7°','8°'];
+  var totalCols = 3 + cols.length + 1;
+
   h += '<div class="fu-table-wrap">';
-  h += '<table class="fu-table"><thead><tr><th>Nome</th><th>Número</th><th>Etapa</th><th>1°</th><th>2°</th><th>3°</th><th>4°</th><th>5°</th><th>6°</th><th>7°</th><th>8°</th><th style="width:40px"></th></tr></thead><tbody>';
+  h += '<table class="fu-table"><thead><tr>';
+  h += '<th class="fu-col-nome">Nome</th><th class="fu-col-fone">Número</th><th class="fu-col-etapa">Etapa</th>';
+  cols.forEach(function(col, ci) {
+    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + '</th>';
+  });
+  h += '<th style="width:70px"><button onclick="addFuColuna()" style="background:none;border:1px dashed var(--gray-300);border-radius:4px;cursor:pointer;color:var(--gray-400);font-size:11px;padding:2px 8px;font-weight:600" title="Adicionar coluna">+</button></th>';
+  h += '</tr></thead><tbody>';
 
   if (leads.length === 0) {
-    h += '<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
+    h += '<tr><td colspan="' + totalCols + '" style="text-align:center;padding:30px;color:var(--gray-400)">Nenhum lead cadastrado</td></tr>';
   } else {
     leads.forEach(function(l) {
       var rowCls = l.etapa ? ' fu-row-' + l.etapa : '';
@@ -1362,9 +1387,9 @@ function renderLeadFollowup() {
       else h += '-';
       h += '</td>';
       h += '<td><span class="fu-etapa e-' + (l.etapa||'novo') + '">' + (l.etapa||'novo').replace(/-/g,' ') + '</span></td>';
-      for (var c = 0; c < 8; c++) {
+      for (var c = 0; c < cols.length; c++) {
         var checked = (l.contatos && l.contatos[c]) ? ' checked' : '';
-        h += '<td><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheckGeral(\'' + l.id + '\',' + c + ',this.checked)"></td>';
+        h += '<td class="fu-td-check"><input type="checkbox" class="fu-check"' + checked + ' onchange="toggleFuCheckGeral(\'' + l.id + '\',' + c + ',this.checked)"></td>';
       }
       h += '<td><button onclick="removeFuLeadGeral(\'' + l.id + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td>';
       h += '</tr>';
@@ -1432,6 +1457,23 @@ function removeFuLeadGeral(leadId) {
   var fuMonth = getFuMonth();
   state.fuLeadsGeral[fuMonth] = (state.fuLeadsGeral[fuMonth]||[]).filter(function(x){return x.id!==leadId;});
   saveState(); renderContent();
+}
+
+function renameFuColuna(idx) {
+  var cols = state.fuColunas || ['1°','2°','3°','4°','5°','6°','7°','8°'];
+  var novo = prompt('Renomear coluna "' + cols[idx] + '":', cols[idx]);
+  if (novo !== null && novo.trim()) {
+    state.fuColunas[idx] = novo.trim();
+    saveState(); renderContent();
+  }
+}
+
+function addFuColuna() {
+  var nome = prompt('Nome da nova coluna:', (state.fuColunas.length + 1) + '°');
+  if (nome !== null && nome.trim()) {
+    state.fuColunas.push(nome.trim());
+    saveState(); renderContent();
+  }
 }
 
 // ===== REUNIÕES — CALENDAR DAY VIEW =====
