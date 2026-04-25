@@ -466,6 +466,103 @@ select.form-input { cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
 
+/* TICKER BAR */
+.ticker-bar {
+  position: fixed; bottom: 0; left: 260px; right: 0; height: 36px; z-index: 90;
+  background: linear-gradient(90deg, var(--navy-900), var(--navy-700), var(--navy-900));
+  overflow: hidden; display: flex; align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.ticker-content {
+  display: flex; align-items: center; gap: 60px; white-space: nowrap;
+  animation: tickerScroll 20s linear infinite;
+  padding-left: 100%;
+}
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);
+}
+.ticker-icon { font-size: 14px; }
+.ticker-value { color: var(--gold); font-weight: 800; }
+
+/* RANKING */
+.ranking-card {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+  border-radius: var(--radius); padding: 28px; color: #fff; position: relative; overflow: hidden;
+}
+.ranking-card::before {
+  content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(212,168,67,0.15), transparent 70%); pointer-events: none;
+}
+.ranking-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  border-radius: 12px; margin-bottom: 6px; transition: var(--transition);
+  background: rgba(255,255,255,0.04);
+}
+.ranking-item:hover { background: rgba(255,255,255,0.08); }
+.ranking-item.top1 { background: linear-gradient(90deg, rgba(212,168,67,0.2), rgba(212,168,67,0.05)); border: 1px solid rgba(212,168,67,0.3); }
+.ranking-item.top2 { background: linear-gradient(90deg, rgba(192,192,192,0.12), rgba(192,192,192,0.03)); border: 1px solid rgba(192,192,192,0.15); }
+.ranking-item.top3 { background: linear-gradient(90deg, rgba(205,127,50,0.12), rgba(205,127,50,0.03)); border: 1px solid rgba(205,127,50,0.15); }
+.ranking-pos {
+  font-size: 18px; font-weight: 900; min-width: 32px; text-align: center;
+  letter-spacing: -0.02em;
+}
+.ranking-pos.p1 { color: var(--gold); }
+.ranking-pos.p2 { color: #C0C0C0; }
+.ranking-pos.p3 { color: #CD7F32; }
+.ranking-pos.p4,.ranking-pos.p5 { color: rgba(255,255,255,0.35); }
+.ranking-avatar {
+  width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.15); background: var(--navy-600);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.6); overflow: hidden;
+}
+.ranking-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ranking-info { flex: 1; }
+.ranking-name { font-size: 14px; font-weight: 700; }
+.ranking-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.ranking-value { font-size: 18px; font-weight: 800; text-align: right; }
+.ranking-item.top1 .ranking-value { color: var(--gold); }
+
+/* META PROGRESS */
+.meta-bar-wrap {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+  border-radius: var(--radius); padding: 28px; color: #fff; position: relative; overflow: hidden;
+}
+.meta-bar-track {
+  background: rgba(255,255,255,0.1); border-radius: 999px; height: 24px;
+  overflow: hidden; position: relative; margin-top: 16px;
+}
+.meta-bar-fill {
+  height: 100%; border-radius: 999px; transition: width 0.6s ease;
+  background: linear-gradient(90deg, var(--gold), #E8C547);
+  position: relative;
+}
+.meta-bar-fill::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* VENDAS POR PRODUTO */
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
+.prod-card {
+  background: var(--white); border-radius: var(--radius); padding: 18px 14px;
+  text-align: center; border: 1px solid rgba(0,0,0,0.04); box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.prod-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.prod-count { font-size: 28px; font-weight: 800; color: var(--navy-600); line-height: 1; }
+.prod-label { font-size: 11px; font-weight: 600; color: var(--gray-400); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+
 .hidden { display: none !important; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -495,8 +592,11 @@ select.form-input { cursor: pointer; }
       <span style="font-size:12px;color:var(--gray-400);font-weight:500" id="topbar-date"></span>
     </div>
   </div>
-  <div class="content" id="app-content"></div>
+  <div class="content" id="app-content" style="padding-bottom:52px"></div>
 </div>
+
+<!-- TICKER BAR -->
+<div class="ticker-bar" id="ticker-bar"></div>
 
 <!-- MODAL CONTAINER -->
 <div id="modal-root"></div>
@@ -599,6 +699,7 @@ function ensureState(s) {
   if (!s.followups) s.followups = [];
   if (!s.faturamento) s.faturamento = { metaAnual: 1000000, meses: {} };
   if (!s.faturamento.meses) s.faturamento.meses = {};
+  if (!s.consulFotos) s.consulFotos = {};
   if (!s.calEventos) s.calEventos = [];
   if (!s.fuColunas) s.fuColunas = ['1°','2°','3°','4°','5°','6°','7°','8°'];
   if (!s.crmStages) s.crmStages = CRM_STAGES.map(function(st){ return { key: st.key, label: st.label, color: st.color }; });
@@ -781,78 +882,167 @@ function renderContent() {
   }
   document.getElementById('topbar-title').textContent = title;
   renderSidebar();
+  renderTicker();
 }
 
 // ===== DASHBOARD =====
-function renderDashboard() {
-  var el = document.getElementById('app-content');
-  var totalLeads = 0, totalReunioes = 0, totalFechados = 0, fatTotal = 0;
+function getDashboardData() {
+  var now = new Date();
+  var mesKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var totalLeads = 0, totalFechados = 0, fatTotal = 0;
+  var ranking = [];
+  var vendasPorProduto = {};
 
   // Leads gerais
   Object.keys(state.leads).forEach(function(id) {
-    totalLeads++;
-    if (state.leads[id].stage === 'venda-fechada') totalFechados++;
+    var l = state.leads[id]; totalLeads++;
+    if (l.stage === 'venda-fechada') { totalFechados++; if (l.tipo) vendasPorProduto[l.tipo] = (vendasPorProduto[l.tipo]||0) + 1; }
   });
 
-  // Leads dos consultores
-  var mesKey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+  // Leads e faturamento por consultor
   CONSULTORES.forEach(function(con) {
     var d = state.consultores[con.id];
+    var leads = 0, fechados = 0, fat = 0;
     Object.keys(d.crm).forEach(function(lid) {
-      totalLeads++;
-      if (d.crm[lid].stage === 'venda-fechada') totalFechados++;
+      var l = d.crm[lid]; totalLeads++; leads++;
+      if (l.stage === 'venda-fechada') { totalFechados++; fechados++; if (l.tipo) vendasPorProduto[l.tipo] = (vendasPorProduto[l.tipo]||0) + 1; }
     });
-    var fat = d.faturamento[mesKey] || [];
-    fat.forEach(function(f) { fatTotal += (f.valor || 0); });
-  });
-  // Faturamento manual do mês
-  if (state.faturamento && state.faturamento.mensal && state.faturamento.mensal[mesKey]) {
-    fatTotal += state.faturamento.mensal[mesKey];
-  }
-
-  var demPend = state.demandas.filter(function(d){return d.stage==='pendente';}).length;
-  var reun = state.reunioes.filter(function(r) {
-    return r.data && r.data.startsWith(today.toISOString().substr(0,10));
-  }).length;
-
-  var h = '';
-
-  // Welcome header
-  var hora = new Date().getHours();
-  var saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  h += '<div style="margin-bottom:28px"><h3 style="font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em">' + saudacao + '</h3>';
-  h += '<p style="font-size:14px;color:var(--gray-400);margin-top:4px;font-weight:400">Aqui está o resumo operacional de hoje</p></div>';
-
-  h += '<div class="stats-grid">';
-  h += statCard('Total de Leads', totalLeads, 'no pipeline');
-  h += statCard('Reuniões Hoje', reun, 'agendadas');
-  h += statCard('Fechados', totalFechados, 'este mês');
-  h += statCard('Faturamento', 'R$ ' + formatNum(fatTotal), MESES[today.getMonth()] + '/' + today.getFullYear());
-  h += statCard('Demandas Pendentes', demPend, 'a resolver');
-  h += '</div>';
-
-  // Consultores overview
-  h += '<div class="card" style="margin-bottom:24px"><div class="card-header"><h3>Consultores — Visão Geral</h3></div><div class="card-body">';
-  h += '<table class="data-table"><thead><tr><th>Consultor</th><th>Leads</th><th>Reuniões (mês)</th><th>Fechamentos</th><th>Faturamento</th><th></th></tr></thead><tbody>';
-  CONSULTORES.forEach(function(con) {
-    var d = state.consultores[con.id];
-    var leads = 0, fechados = 0, fat = 0, reuns = 0;
-    Object.keys(d.crm).forEach(function(lid) { leads++; if (d.crm[lid].stage === 'fechado') fechados++; });
     var fatArr = d.faturamento[mesKey] || [];
     fatArr.forEach(function(f) { fat += (f.valor||0); });
-    reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === con.id && r.data && r.data.substr(0,7) === mesKey; }).length;
-    h += '<tr>';
-    h += '<td><strong>' + escHtml(con.nome) + '</strong></td>';
-    h += '<td>' + leads + '</td>';
-    h += '<td>' + reuns + '</td>';
-    h += '<td><span class="tag tag-green">' + fechados + '</span></td>';
-    h += '<td style="font-weight:700;color:var(--green)">R$ ' + formatNum(fat) + '</td>';
-    h += '<td><button class="btn btn-outline btn-sm" onclick="selectConsultor(\'' + con.id + '\')">Ver</button></td>';
+    fatTotal += fat;
+    var reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === con.id && r.data && r.data.substr(0,7) === mesKey; }).length;
+    ranking.push({ id: con.id, nome: con.nome, fat: fat, leads: leads, fechados: fechados, reuns: reuns });
+  });
+
+  if (state.faturamento && state.faturamento.mensal && state.faturamento.mensal[mesKey]) fatTotal += state.faturamento.mensal[mesKey];
+
+  ranking.sort(function(a,b){ return b.fat - a.fat; });
+
+  var metaMes = state.faturamento ? Math.round((state.faturamento.metaAnual || 0) / 12) : 0;
+  var reun = (state.reunioes||[]).filter(function(r){ return r.data && r.data.startsWith(now.toISOString().substr(0,10)); }).length;
+
+  return { mesKey: mesKey, totalLeads: totalLeads, totalFechados: totalFechados, fatTotal: fatTotal, ranking: ranking, vendasPorProduto: vendasPorProduto, metaMes: metaMes, reunHoje: reun };
+}
+
+function getConsulAvatar(conId) {
+  var foto = (state.consulFotos || {})[conId];
+  if (foto) return '<img src="' + escHtml(foto) + '" alt="">';
+  var con = CONSULTORES.find(function(c){return c.id===conId;});
+  return con ? con.nome.charAt(0) : '?';
+}
+
+function setConsulFoto(conId) {
+  var url = prompt('Cole a URL da foto do consultor (imagem quadrada):');
+  if (url !== null && url.trim()) {
+    if (!state.consulFotos) state.consulFotos = {};
+    state.consulFotos[conId] = url.trim();
+    saveState(); renderContent();
+  }
+}
+
+function renderTicker() {
+  var bar = document.getElementById('ticker-bar');
+  if (!bar) return;
+  var data = getDashboardData();
+  if (data.ranking.length === 0 || data.ranking[0].fat === 0) {
+    bar.style.display = 'none'; return;
+  }
+  bar.style.display = 'flex';
+  var top = data.ranking[0];
+  var items = '';
+  for (var i = 0; i < 6; i++) {
+    items += '<div class="ticker-item"><span class="ticker-icon">🏆</span> <span style="font-weight:700">' + escHtml(top.nome) + '</span> lidera o ranking com <span class="ticker-value">R$ ' + formatNum(top.fat) + '</span> em vendas este mês</div>';
+  }
+  bar.innerHTML = '<div class="ticker-content">' + items + '</div>';
+}
+
+function renderDashboard() {
+  var el = document.getElementById('app-content');
+  var now = new Date();
+  var data = getDashboardData();
+  var h = '';
+
+  // Welcome
+  var hora = now.getHours();
+  var saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  h += '<div style="margin-bottom:28px"><h3 style="font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em">' + saudacao + '</h3>';
+  h += '<p style="font-size:14px;color:var(--gray-400);margin-top:4px;font-weight:400">Resumo operacional — ' + MESES_FULL[now.getMonth()] + ' ' + now.getFullYear() + '</p></div>';
+
+  // ===== META + FATURAMENTO =====
+  var pctMeta = data.metaMes > 0 ? Math.min(100, Math.round(data.fatTotal / data.metaMes * 100)) : 0;
+  var falta = Math.max(0, data.metaMes - data.fatTotal);
+
+  h += '<div class="meta-bar-wrap" style="margin-bottom:24px">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">';
+  h += '<div><div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em">Faturamento do Mês</div>';
+  h += '<div style="font-size:36px;font-weight:900;margin-top:4px;letter-spacing:-0.03em"><span style="color:var(--gold)">R$ ' + formatNum(data.fatTotal) + '</span> <span style="font-size:18px;font-weight:500;color:rgba(255,255,255,0.35)">/ R$ ' + formatNum(data.metaMes) + '</span></div></div>';
+  h += '<div style="text-align:right">';
+  h += '<div style="font-size:40px;font-weight:900;color:' + (pctMeta >= 100 ? '#22C55E' : 'var(--gold)') + '">' + pctMeta + '%</div>';
+  h += '<div style="font-size:11px;color:rgba(255,255,255,0.4)">da meta atingida</div>';
+  h += '</div></div>';
+  h += '<div class="meta-bar-track"><div class="meta-bar-fill" style="width:' + pctMeta + '%"></div></div>';
+  h += '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px">';
+  h += '<span style="color:rgba(255,255,255,0.35)">R$ 0</span>';
+  if (falta > 0) h += '<span style="color:rgba(255,255,255,0.5)">Faltam <strong style="color:var(--gold)">R$ ' + formatNum(falta) + '</strong></span>';
+  else h += '<span style="color:#22C55E;font-weight:700">Meta batida! 🎯</span>';
+  h += '<span style="color:rgba(255,255,255,0.35)">R$ ' + formatNum(data.metaMes) + '</span>';
+  h += '</div></div>';
+
+  // ===== STATS GRID =====
+  h += '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">';
+  h += statCard('Total de Leads', data.totalLeads, 'no pipeline');
+  h += statCard('Reuniões Hoje', data.reunHoje, 'agendadas');
+  h += statCard('Fechados', data.totalFechados, 'este mês');
+  h += statCard('Demandas Pendentes', state.demandas.filter(function(d){return d.stage==='pendente';}).length, 'a resolver');
+  h += '</div>';
+
+  // ===== RANKING + VENDAS POR PRODUTO (side by side) =====
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">';
+
+  // Ranking
+  h += '<div class="ranking-card">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">';
+  h += '<div><div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em">Ranking Consultores</div>';
+  h += '<div style="font-size:16px;font-weight:800;margin-top:2px">Por Faturamento</div></div>';
+  h += '<div style="font-size:28px">🏆</div></div>';
+
+  data.ranking.forEach(function(r, i) {
+    var posClass = i < 3 ? ' top' + (i+1) : '';
+    h += '<div class="ranking-item' + posClass + '">';
+    h += '<div class="ranking-pos p' + (i+1) + '">' + (i+1) + '°</div>';
+    h += '<div class="ranking-avatar" onclick="event.stopPropagation();setConsulFoto(\'' + r.id + '\')" style="cursor:pointer" title="Clique para definir foto">' + getConsulAvatar(r.id) + '</div>';
+    h += '<div class="ranking-info"><div class="ranking-name">' + escHtml(r.nome) + '</div>';
+    h += '<div class="ranking-sub">' + r.fechados + ' vendas · ' + r.leads + ' leads</div></div>';
+    h += '<div class="ranking-value">R$ ' + formatNum(r.fat) + '</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+
+  // Vendas por produto
+  h += '<div>';
+  h += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>Vendas por Produto</h3></div><div class="card-body">';
+  h += '<div class="prod-grid">';
+  CRM_TIPOS.forEach(function(tipo) {
+    var count = data.vendasPorProduto[tipo] || 0;
+    h += '<div class="prod-card"><div class="prod-count">' + count + '</div><div class="prod-label">' + escHtml(tipo) + '</div></div>';
+  });
+  h += '</div></div></div>';
+
+  // Consultores mini table
+  h += '<div class="card"><div class="card-header"><h3>Consultores</h3></div><div class="card-body" style="padding:12px">';
+  h += '<table class="data-table"><thead><tr><th>Nome</th><th>Leads</th><th>Vendas</th><th>Fat.</th></tr></thead><tbody>';
+  data.ranking.forEach(function(r) {
+    h += '<tr onclick="selectConsultor(\'' + r.id + '\')" style="cursor:pointer">';
+    h += '<td><strong>' + escHtml(r.nome) + '</strong></td>';
+    h += '<td>' + r.leads + '</td>';
+    h += '<td><span class="tag tag-green">' + r.fechados + '</span></td>';
+    h += '<td style="font-weight:700;color:var(--green)">R$ ' + formatNum(r.fat) + '</td>';
     h += '</tr>';
   });
   h += '</tbody></table></div></div>';
+  h += '</div>'; // end grid
 
-  // Últimas reuniões
+  // ===== PRÓXIMAS REUNIÕES =====
   h += '<div class="card"><div class="card-header"><h3>Próximas Reuniões</h3><button class="btn btn-outline btn-sm" onclick="switchModule(\'reunioes\',\'\')">Ver Todas →</button></div><div class="card-body">';
   var proxReun = state.reunioes.filter(function(r){ return r.data >= today.toISOString().substr(0,10); }).sort(function(a,b){ return a.data < b.data ? -1 : 1; }).slice(0,5);
   if (proxReun.length === 0) {
@@ -861,8 +1051,7 @@ function renderDashboard() {
     proxReun.forEach(function(r) {
       var rIdx = state.reunioes.indexOf(r);
       var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===r.consultor;}); if(cn) conNome = cn.nome;
-      var stColor = r.status==='confirmada'?'green':r.status==='realizada'?'green':r.status==='cancelada'?'red':'yellow';
-      h += '<div class="meeting-card" style="cursor:pointer;transition:var(--transition)" onclick="openEditReuniao(' + rIdx + ')">';
+      h += '<div class="meeting-card" style="cursor:pointer" onclick="openEditReuniao(' + rIdx + ')">';
       h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + (r.horaFim ? '<div style="font-size:10px;font-weight:400;color:var(--gray-400)">' + escHtml(r.horaFim) + '</div>' : '') + '</div>';
       h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div>';
       h += '<div class="detail">' + escHtml(r.data||'') + ' — ' + escHtml(conNome) + '</div>';
