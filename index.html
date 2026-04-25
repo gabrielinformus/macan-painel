@@ -652,7 +652,6 @@ function renderSidebar() {
     h += '<div class="nav-sub">';
     h += subNavItem('leads', 'crm', 'CRM');
     h += subNavItem('leads', 'followup', 'Follow-Up');
-    h += subNavItem('leads', 'reunioes', 'Reuniões');
     h += '</div>';
   }
   h += navItem('demandas', '', 'Demandas', '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>');
@@ -694,11 +693,10 @@ function renderContent() {
     case 'consultores': var cn = CONSULTORES.find(function(c){return c.id===state.consultor;}); title = 'Consultores — ' + (cn?cn.nome:''); renderConsultor(); break;
     case 'leads':
       if (state.submodule === 'followup') { title = 'Leads — Follow-Up'; renderLeadFollowup(); }
-      else if (state.submodule === 'reunioes') { title = 'Leads — Reuniões'; renderLeadReunioes(); }
       else { title = 'Leads MACAN — CRM'; state.submodule = 'crm'; renderLeadCRM(); }
       break;
     case 'demandas': title = 'Demandas'; renderDemandas(); break;
-    case 'calendario': title = 'Calendário'; renderCalendario(); break;
+    case 'calendario': title = 'Calendário'; renderLeadReunioes(); break;
     case 'faturamento': title = 'Faturamento'; renderFaturamento(); break;
   }
   document.getElementById('topbar-title').textContent = title;
