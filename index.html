@@ -1112,7 +1112,7 @@ function renderConsultorFollowup(conId, data) {
   h += '<table class="fu-table"><thead><tr>';
   h += '<th class="fu-col-nome">Nome</th><th class="fu-col-fone">Número</th><th class="fu-col-etapa">Etapa</th>';
   cols.forEach(function(col, ci) {
-    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + '</th>';
+    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + ' <span onclick="event.stopPropagation();removeFuColuna(' + ci + ')" style="cursor:pointer;color:var(--gray-400);font-size:10px" title="Apagar coluna">×</span></th>';
   });
   h += '<th style="width:70px"><button onclick="addFuColuna()" style="background:none;border:1px dashed var(--gray-300);border-radius:4px;cursor:pointer;color:var(--gray-400);font-size:11px;padding:2px 8px;font-weight:600" title="Adicionar coluna">+</button></th>';
   h += '</tr></thead><tbody>';
@@ -1483,7 +1483,7 @@ function renderLeadFollowup() {
   h += '<table class="fu-table"><thead><tr>';
   h += '<th class="fu-col-nome">Nome</th><th class="fu-col-fone">Número</th><th class="fu-col-etapa">Etapa</th>';
   cols.forEach(function(col, ci) {
-    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + '</th>';
+    h += '<th class="fu-col-check" onclick="renameFuColuna(' + ci + ')" title="Clique para renomear">' + escHtml(col) + ' <span onclick="event.stopPropagation();removeFuColuna(' + ci + ')" style="cursor:pointer;color:var(--gray-400);font-size:10px" title="Apagar coluna">×</span></th>';
   });
   h += '<th style="width:70px"><button onclick="addFuColuna()" style="background:none;border:1px dashed var(--gray-300);border-radius:4px;cursor:pointer;color:var(--gray-400);font-size:11px;padding:2px 8px;font-weight:600" title="Adicionar coluna">+</button></th>';
   h += '</tr></thead><tbody>';
@@ -1587,6 +1587,13 @@ function addFuColuna() {
     state.fuColunas.push(nome.trim());
     saveState(); renderContent();
   }
+}
+
+function removeFuColuna(idx) {
+  var cols = state.fuColunas;
+  if (!confirm('Apagar a coluna "' + cols[idx] + '"?')) return;
+  cols.splice(idx, 1);
+  saveState(); renderContent();
 }
 
 // ===== REUNIÕES — CALENDAR DAY VIEW =====
