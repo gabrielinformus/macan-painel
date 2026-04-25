@@ -785,7 +785,15 @@ function renderDashboard() {
       h += '<div class="meeting-card" style="cursor:pointer;transition:var(--transition)" onclick="openEditReuniao(' + rIdx + ')">';
       h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + (r.horaFim ? '<div style="font-size:10px;font-weight:400;color:var(--gray-400)">' + escHtml(r.horaFim) + '</div>' : '') + '</div>';
       h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div>';
-      h += '<div class="detail">' + escHtml(r.data||'') + ' — ' + escHtml(conNome) + (r.local ? ' — ' + escHtml(r.local) : '') + '</div></div>';
+      h += '<div class="detail">' + escHtml(r.data||'') + ' — ' + escHtml(conNome) + '</div>';
+      if (r.local) {
+        if (r.local.startsWith('http')) {
+          h += '<div class="detail" style="margin-top:2px"><a href="' + escHtml(r.local) + '" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);text-decoration:none;font-weight:500">Entrar na reunião ↗</a></div>';
+        } else {
+          h += '<div class="detail" style="margin-top:2px">📍 ' + escHtml(r.local) + '</div>';
+        }
+      }
+      h += '</div>';
       h += '<div style="display:flex;align-items:center;gap:6px">';
       h += '<select onclick="event.stopPropagation()" onchange="state.reunioes[' + rIdx + '].status=this.value;saveState();renderContent()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
       ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
