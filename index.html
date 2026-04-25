@@ -779,12 +779,21 @@ function renderDashboard() {
     h += '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px">Nenhuma reunião agendada</div>';
   } else {
     proxReun.forEach(function(r) {
+      var rIdx = state.reunioes.indexOf(r);
       var conNome = ''; var cn = CONSULTORES.find(function(c){return c.id===r.consultor;}); if(cn) conNome = cn.nome;
-      h += '<div class="meeting-card">';
-      h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + '</div>';
-      h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div><div class="detail">' + escHtml(r.data||'') + ' — Consultor: ' + escHtml(conNome) + '</div></div>';
-      h += '<span class="tag tag-' + (r.status==='confirmada'?'green':r.status==='cancelada'?'red':'yellow') + '">' + escHtml(r.status||'pendente') + '</span>';
-      h += '</div>';
+      var stColor = r.status==='confirmada'?'green':r.status==='realizada'?'green':r.status==='cancelada'?'red':'yellow';
+      h += '<div class="meeting-card" style="cursor:pointer;transition:var(--transition)" onclick="openEditReuniao(' + rIdx + ')">';
+      h += '<div class="meeting-time">' + escHtml(r.hora||'--:--') + (r.horaFim ? '<div style="font-size:10px;font-weight:400;color:var(--gray-400)">' + escHtml(r.horaFim) + '</div>' : '') + '</div>';
+      h += '<div class="meeting-info"><div class="name">' + escHtml(r.lead||'') + '</div>';
+      h += '<div class="detail">' + escHtml(r.data||'') + ' — ' + escHtml(conNome) + (r.local ? ' — ' + escHtml(r.local) : '') + '</div></div>';
+      h += '<div style="display:flex;align-items:center;gap:6px">';
+      h += '<select onclick="event.stopPropagation()" onchange="state.reunioes[' + rIdx + '].status=this.value;saveState();renderContent()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--gray-200);font-size:11px;font-weight:600">';
+      ['pendente','confirmada','realizada','cancelada'].forEach(function(st) {
+        h += '<option value="' + st + '"' + (r.status===st?' selected':'') + '>' + st.charAt(0).toUpperCase()+st.slice(1) + '</option>';
+      });
+      h += '</select>';
+      h += '<button onclick="event.stopPropagation();removeReuniao(' + rIdx + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:16px" title="Remover">×</button>';
+      h += '</div></div>';
     });
   }
   h += '</div></div>';
