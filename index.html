@@ -466,6 +466,29 @@ select.form-input { cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
 
+/* DATE FILTER */
+.dash-filter-btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: var(--gray-700); cursor: pointer;
+  transition: var(--transition); box-shadow: var(--shadow);
+}
+.dash-filter-btn:hover { border-color: var(--navy-300); background: var(--gray-50); }
+.dash-filter-btn svg { width: 16px; height: 16px; stroke: var(--gray-400); }
+.dash-filter-dropdown {
+  position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 30;
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12); padding: 16px; min-width: 320px;
+  animation: slideUp 0.15s ease;
+}
+.dash-preset {
+  display: block; width: 100%; text-align: left; padding: 8px 12px; border: none;
+  background: none; font-size: 13px; font-weight: 500; color: var(--gray-600);
+  cursor: pointer; border-radius: 8px; transition: var(--transition);
+}
+.dash-preset:hover { background: var(--navy-50); color: var(--navy-600); }
+.dash-preset.active { background: var(--navy-600); color: #fff; font-weight: 600; }
+
 /* TICKER BAR */
 .ticker-bar {
   position: fixed; bottom: 0; left: 260px; right: 0; height: 36px; z-index: 90;
@@ -792,6 +815,39 @@ function formatNum(n) { return Number(n).toLocaleString('pt-BR'); }
 
 // ===== DATE =====
 var today = new Date();
+
+// Dashboard filter
+var _dashFrom = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
+var _dashTo = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+var _dashFilterOpen = false;
+
+function setDashFilter(from, to) { _dashFrom = from; _dashTo = to; _dashFilterOpen = false; renderContent(); }
+function setDashPreset(preset) {
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  var from, to = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  switch(preset) {
+    case 'hoje': from = to; break;
+    case 'ontem': var yd = new Date(y,m,d-1); from = to = yd.getFullYear()+'-'+String(yd.getMonth()+1).padStart(2,'0')+'-'+String(yd.getDate()).padStart(2,'0'); break;
+    case '7dias': var d7 = new Date(y,m,d-6); from = d7.getFullYear()+'-'+String(d7.getMonth()+1).padStart(2,'0')+'-'+String(d7.getDate()).padStart(2,'0'); break;
+    case '14dias': var d14 = new Date(y,m,d-13); from = d14.getFullYear()+'-'+String(d14.getMonth()+1).padStart(2,'0')+'-'+String(d14.getDate()).padStart(2,'0'); break;
+    case '30dias': var d30 = new Date(y,m,d-29); from = d30.getFullYear()+'-'+String(d30.getMonth()+1).padStart(2,'0')+'-'+String(d30.getDate()).padStart(2,'0'); break;
+    case 'este-mes': from = y+'-'+String(m+1).padStart(2,'0')+'-01'; break;
+    case 'mes-passado': var pm = new Date(y,m-1,1); var pmEnd = new Date(y,m,0); from = pm.getFullYear()+'-'+String(pm.getMonth()+1).padStart(2,'0')+'-01'; to = pmEnd.getFullYear()+'-'+String(pmEnd.getMonth()+1).padStart(2,'0')+'-'+String(pmEnd.getDate()).padStart(2,'0'); break;
+    case 'este-ano': from = y+'-01-01'; break;
+    default: from = y+'-'+String(m+1).padStart(2,'0')+'-01';
+  }
+  setDashFilter(from, to);
+}
+function toggleDashFilter() { _dashFilterOpen = !_dashFilterOpen; renderContent(); }
+function applyCustomDashFilter() {
+  var f = document.getElementById('dash-from').value;
+  var t = document.getElementById('dash-to').value;
+  if (f && t) setDashFilter(f, t);
+}
+function formatDateBR(ds) { var p=ds.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function isInRange(dateStr) { return dateStr >= _dashFrom && dateStr <= _dashTo; }
+function getFatDateFromEntry(f) { if (f.data) { var p=f.data.split('/'); if(p.length===2) { var now=new Date(); return now.getFullYear()+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0'); } } return ''; }
 document.getElementById('topbar-date').textContent =
   today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -888,40 +944,67 @@ function renderContent() {
 // ===== DASHBOARD =====
 function getDashboardData() {
   var now = new Date();
-  var mesKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
   var totalLeads = 0, totalFechados = 0, fatTotal = 0;
   var ranking = [];
   var vendasPorProduto = {};
+  var reunPeriodo = 0;
 
-  // Leads gerais
+  // Leads gerais (filtrados por createdAt)
   Object.keys(state.leads).forEach(function(id) {
-    var l = state.leads[id]; totalLeads++;
+    var l = state.leads[id];
+    var lDate = l.createdAt ? l.createdAt.substr(0,10) : '';
+    if (lDate && !isInRange(lDate)) return;
+    totalLeads++;
     if (l.stage === 'venda-fechada') { totalFechados++; if (l.tipo) vendasPorProduto[l.tipo] = (vendasPorProduto[l.tipo]||0) + 1; }
   });
 
+  // Reuniões no período
+  reunPeriodo = (state.reunioes||[]).filter(function(r){ return r.data && isInRange(r.data); }).length;
+
   // Leads e faturamento por consultor
+  // Faturamento: busca todos os meses que possam cair no range
   CONSULTORES.forEach(function(con) {
     var d = state.consultores[con.id];
     var leads = 0, fechados = 0, fat = 0;
     Object.keys(d.crm).forEach(function(lid) {
-      var l = d.crm[lid]; totalLeads++; leads++;
+      var l = d.crm[lid];
+      var lDate = l.createdAt ? l.createdAt.substr(0,10) : '';
+      if (lDate && !isInRange(lDate)) return;
+      totalLeads++; leads++;
       if (l.stage === 'venda-fechada') { totalFechados++; fechados++; if (l.tipo) vendasPorProduto[l.tipo] = (vendasPorProduto[l.tipo]||0) + 1; }
     });
-    var fatArr = d.faturamento[mesKey] || [];
-    fatArr.forEach(function(f) { fat += (f.valor||0); });
+    // Percorrer todos os meses de faturamento
+    Object.keys(d.faturamento).forEach(function(mk) {
+      var fatArr = d.faturamento[mk] || [];
+      fatArr.forEach(function(f) {
+        var fDate = getFatDateFromEntry(f);
+        if (fDate && !isInRange(fDate)) return;
+        if (!fDate) {
+          if (mk >= _dashFrom.substr(0,7) && mk <= _dashTo.substr(0,7)) fat += (f.valor||0);
+        } else {
+          fat += (f.valor||0);
+        }
+      });
+    });
     fatTotal += fat;
-    var reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === con.id && r.data && r.data.substr(0,7) === mesKey; }).length;
+    var reuns = (state.reunioes||[]).filter(function(r){ return r.consultor === con.id && r.data && isInRange(r.data); }).length;
     ranking.push({ id: con.id, nome: con.nome, fat: fat, leads: leads, fechados: fechados, reuns: reuns });
   });
 
-  if (state.faturamento && state.faturamento.mensal && state.faturamento.mensal[mesKey]) fatTotal += state.faturamento.mensal[mesKey];
+  // Faturamento manual: somar meses que estejam no range
+  if (state.faturamento && state.faturamento.mensal) {
+    Object.keys(state.faturamento.mensal).forEach(function(mk) {
+      if (mk >= _dashFrom.substr(0,7) && mk <= _dashTo.substr(0,7)) {
+        fatTotal += state.faturamento.mensal[mk] || 0;
+      }
+    });
+  }
 
   ranking.sort(function(a,b){ return b.fat - a.fat; });
 
   var metaMes = state.faturamento ? Math.round((state.faturamento.metaAnual || 0) / 12) : 0;
-  var reun = (state.reunioes||[]).filter(function(r){ return r.data && r.data.startsWith(now.toISOString().substr(0,10)); }).length;
 
-  return { mesKey: mesKey, totalLeads: totalLeads, totalFechados: totalFechados, fatTotal: fatTotal, ranking: ranking, vendasPorProduto: vendasPorProduto, metaMes: metaMes, reunHoje: reun };
+  return { totalLeads: totalLeads, totalFechados: totalFechados, fatTotal: fatTotal, ranking: ranking, vendasPorProduto: vendasPorProduto, metaMes: metaMes, reunPeriodo: reunPeriodo };
 }
 
 function getConsulAvatar(conId) {
@@ -962,11 +1045,41 @@ function renderDashboard() {
   var data = getDashboardData();
   var h = '';
 
-  // Welcome
+  // Welcome + Filter
   var hora = now.getHours();
   var saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  h += '<div style="margin-bottom:28px"><h3 style="font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em">' + saudacao + '</h3>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:16px">';
+  h += '<div><h3 style="font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-0.02em">' + saudacao + '</h3>';
   h += '<p style="font-size:14px;color:var(--gray-400);margin-top:4px;font-weight:400">Resumo operacional — ' + MESES_FULL[now.getMonth()] + ' ' + now.getFullYear() + '</p></div>';
+
+  // Date filter
+  h += '<div style="position:relative">';
+  h += '<button class="dash-filter-btn" onclick="toggleDashFilter()">';
+  h += '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  h += formatDateBR(_dashFrom) + ' — ' + formatDateBR(_dashTo);
+  h += ' <span style="font-size:10px;color:var(--gray-400)">▼</span></button>';
+
+  if (_dashFilterOpen) {
+    h += '<div class="dash-filter-dropdown" onclick="event.stopPropagation()">';
+    h += '<div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Período Rápido</div>';
+    var presets = [
+      ['hoje','Hoje'],['ontem','Ontem'],['7dias','Últimos 7 dias'],['14dias','Últimos 14 dias'],
+      ['30dias','Últimos 30 dias'],['este-mes','Este mês'],['mes-passado','Mês passado'],['este-ano','Este ano']
+    ];
+    presets.forEach(function(p) {
+      h += '<button class="dash-preset" onclick="setDashPreset(\'' + p[0] + '\')">' + p[1] + '</button>';
+    });
+    h += '<div style="border-top:1px solid var(--gray-100);margin:12px 0;padding-top:12px">';
+    h += '<div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Período Personalizado</div>';
+    h += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">';
+    h += '<input type="date" id="dash-from" class="form-input" style="flex:1;font-size:12px;padding:7px 10px" value="' + _dashFrom + '">';
+    h += '<span style="color:var(--gray-400);font-size:12px">até</span>';
+    h += '<input type="date" id="dash-to" class="form-input" style="flex:1;font-size:12px;padding:7px 10px" value="' + _dashTo + '">';
+    h += '</div>';
+    h += '<button class="btn btn-primary btn-sm" style="width:100%" onclick="applyCustomDashFilter()">Aplicar Filtro</button>';
+    h += '</div></div>';
+  }
+  h += '</div></div>';
 
   // ===== META + FATURAMENTO =====
   var pctMeta = data.metaMes > 0 ? Math.min(100, Math.round(data.fatTotal / data.metaMes * 100)) : 0;
@@ -990,9 +1103,9 @@ function renderDashboard() {
 
   // ===== STATS GRID =====
   h += '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">';
-  h += statCard('Total de Leads', data.totalLeads, 'no pipeline');
-  h += statCard('Reuniões Hoje', data.reunHoje, 'agendadas');
-  h += statCard('Fechados', data.totalFechados, 'este mês');
+  h += statCard('Total de Leads', data.totalLeads, 'no período');
+  h += statCard('Reuniões', data.reunPeriodo, 'no período');
+  h += statCard('Fechados', data.totalFechados, 'no período');
   h += statCard('Demandas Pendentes', state.demandas.filter(function(d){return d.stage==='pendente';}).length, 'a resolver');
   h += '</div>';
 
