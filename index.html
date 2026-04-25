@@ -309,7 +309,7 @@ select.form-input { cursor: pointer; }
 }
 .cal-time-label {
   font-size: 10px; font-weight: 600; color: var(--gray-400); text-align: right;
-  padding: 0 8px; min-width: 60px; max-width: 60px; position: relative; top: -7px;
+  padding: 0 8px; min-width: 60px; max-width: 60px;
 }
 .cal-row {
   display: grid; min-height: 48px; border-bottom: 1px solid var(--gray-100);
@@ -1570,9 +1570,12 @@ function renderLeadReunioes() {
 
   el.innerHTML = h;
 
-  // Scroll to 8am
+  // Scroll to current hour if today
   var body = document.getElementById('cal-body');
-  if (body) body.scrollTop = rowH;
+  if (body && calDateStr(new Date()) === dateStr) {
+    var curH = new Date().getHours();
+    if (curH >= CAL_HOURS_START) body.scrollTop = (curH - CAL_HOURS_START) * rowH;
+  }
 }
 
 function renderReunioesList() {
