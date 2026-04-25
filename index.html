@@ -539,9 +539,11 @@ select.form-input { cursor: pointer; }
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 .ticker-content {
-  display: flex; align-items: center; gap: 60px; white-space: nowrap;
-  animation: tickerScroll 20s linear infinite;
-  padding-left: 100%;
+  display: flex; align-items: center; white-space: nowrap;
+  animation: tickerScroll 25s linear infinite;
+}
+.ticker-set {
+  display: flex; align-items: center; gap: 80px; padding-right: 80px;
 }
 @keyframes tickerScroll {
   0% { transform: translateX(0); }
@@ -659,7 +661,7 @@ select.form-input { cursor: pointer; }
   .card-body { padding: 14px; }
   .modal { width: 95vw !important; max-height: 90vh; overflow-y: auto; }
   .login-box { width: 92vw !important; padding: 32px 24px !important; }
-  .ticker-bar { font-size: 12px; }
+  .ticker-bar { font-size: 12px; left: 0 !important; }
   .topbar-right span { display: none; }
   .topbar-right span:last-of-type { display: inline; }
   .dash-2col { grid-template-columns: 1fr !important; }
@@ -1266,11 +1268,11 @@ function renderTicker() {
   }
   bar.style.display = 'flex';
   var top = data.ranking[0];
-  var items = '';
-  for (var i = 0; i < 6; i++) {
-    items += '<div class="ticker-item"><span class="ticker-icon">🏆</span> <span style="font-weight:700">' + escHtml(top.nome) + '</span> lidera o ranking com <span class="ticker-value">R$ ' + formatNum(top.fat) + '</span> em vendas este mês</div>';
-  }
-  bar.innerHTML = '<div class="ticker-content">' + items + '</div>';
+  var item = '<div class="ticker-item"><span class="ticker-icon">🏆</span> <span style="font-weight:700">' + escHtml(top.nome) + '</span> lidera o ranking com <span class="ticker-value">R$ ' + formatNum(top.fat) + '</span> em vendas este mês</div>';
+  var set = '<div class="ticker-set">';
+  for (var i = 0; i < 8; i++) set += item;
+  set += '</div>';
+  bar.innerHTML = '<div class="ticker-content">' + set + set + '</div>';
 }
 
 function renderDashboard() {
