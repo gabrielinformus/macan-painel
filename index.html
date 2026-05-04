@@ -845,6 +845,18 @@ function ensureState(s) {
     { key: 'perdido', label: 'Perdido', color: '#DC2626' },
     { key: 'mes-que-vem', label: 'Mês que Vem', color: '#06B6D4' }
   ];
+  // Migração: corrigir valores de faturamento/meta corrompidos
+  if (!s._fix_fat_v1) {
+    if (s.faturamento) {
+      if (s.faturamento.metaAnual > 500000) s.faturamento.metaAnual = 264000;
+      if (s.faturamento.mensal) {
+        Object.keys(s.faturamento.mensal).forEach(function(mk) {
+          if (s.faturamento.mensal[mk] > 500000) s.faturamento.mensal[mk] = 0;
+        });
+      }
+    }
+    s._fix_fat_v1 = true;
+  }
   // Migração: reuniões de consultores → state.reunioes (fonte única)
   CONSULTORES.forEach(function(c) {
     var conReuns = s.consultores[c.id].reunioes || [];
